@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
+/// firmware_i2c and binary headers
 #include <firmware_i2c.h>
 #include <binary.h>
 

@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 
+/// sinewave and mcp4725 headers
 #include <sinewave.h>
 #include <mcp4725.h>
 

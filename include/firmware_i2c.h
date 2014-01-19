@@ -1,6 +1,7 @@
 #ifndef FIRMWARE_I2C_H
 #define FIRMWARE_I2C_H
 
+/// linux i2c driver headers
 #include <linux/i2c-dev.h>
 
 

@@ -1,6 +1,7 @@
 #ifndef MCP4725_H
 #define MCP4725_H
 
+/// linux i2c driver headers
 #include <firmware_i2c.h>
 
 

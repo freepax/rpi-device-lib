@@ -1,7 +1,8 @@
 #ifndef L3GD20_H
 #define L3GD20_H
 
-#include "firmware_i2c.h"
+/// linux i2c driver headers
+#include <firmware_i2c.h>
 
 
 /// two possible i2c addresses for L3GD20

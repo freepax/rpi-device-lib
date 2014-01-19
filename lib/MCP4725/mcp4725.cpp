@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 
+/// binary and mcp4725 headers
 #include <binary.h>
 #include <mcp4725.h>
 
