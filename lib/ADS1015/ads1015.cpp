@@ -5,7 +5,8 @@
 #include <ads1015.h>
 
 
-ADS1015::ADS1015(char *device, int address, bool debug) : Firmware_I2C(device, address, debug),
+ADS1015::ADS1015(char *device, int address, bool debug) :
+    Firmware_I2C(device, address, debug),
     mOs(OSNoEffectOnWrite), mMux(MUXAIN0GND), mPga(PGA2048), mMode(MODEContinous), mVref(2.048),
     mDr(DR128), mCompMode(COMPMODEHysteresis), mCompPol(COMPPOLActiveLow), mCompLat(COMPLATNoneLatching), mCompQue(COMPQUEDisable) {}
 

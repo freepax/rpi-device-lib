@@ -3,7 +3,8 @@
 #include <l3gd20.h>
 
 
-L3GD20::L3GD20(char *device, int address, bool debug) : Firmware_I2C(device, address, debug),
+L3GD20::L3GD20(char *device, int address, bool debug) :
+    Firmware_I2C(device, address, debug),
     mWho(L3dg20RegistersDefaults::mWhoDefaults),
     mControl_1(L3dg20RegistersDefaults::mControl_1Defaults), mControl_2(L3dg20RegistersDefaults::mControl_2Defaults),
     mControl_3(L3dg20RegistersDefaults::mControl_3Defaults), mControl_4(L3dg20RegistersDefaults::mControl_4Defaults),

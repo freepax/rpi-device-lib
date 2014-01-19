@@ -6,7 +6,8 @@
 #include <mcp4725.h>
 
 
-MCP4725::MCP4725(char *device, unsigned char address, bool debug) : mConfig(-1), Firmware_I2C(device, address, debug)
+MCP4725::MCP4725(char *device, unsigned char address, bool debug) :
+    Firmware_I2C(device, address, debug), mConfig(-1)
 {
     if (mDebug) {
         std::cout << "MCP4725::" <<  __func__ << "(): device: " << mDevice << std::endl;
