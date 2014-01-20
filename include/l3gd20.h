@@ -182,8 +182,6 @@ static const int mInteruptzlDefaults              = 0b00000000;
 static const int mInteruptDurationDefaults        = 0b00000000;
 }
 
-static const char *I2C_DEVICE = "/dev/i2c-1";
-
 
 class L3GD20 : public Firmware_I2C {
 public:
