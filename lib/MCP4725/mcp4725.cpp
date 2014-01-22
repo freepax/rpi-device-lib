@@ -7,21 +7,11 @@
 #include <mcp4725.h>
 
 
-MCP4725::MCP4725(char *device, unsigned char address, bool debug) :
-    Firmware_I2C(device, address, debug), mConfig(-1)
+MCP4725::MCP4725(char *device, unsigned char address) :
+    Firmware_I2C(device, address),
+    mControl(Mcp4725Config::ConfigFast1),
+    mPowerDown(Mcp4725Power::PowerNormal)
 {
-    if (mDebug) {
-        std::cout << "MCP4725::" <<  __func__ << "(): device: " << mDevice << std::endl;
-        std::cout << "MCP4725::" << __func__ << "(): addres: " << std::endl;
-        Binary binary;
-        binary.printByteAsBinary(mAddress);
-    }
-}
-
-
-MCP4725::~MCP4725()
-{
-    closeDevice();
 }
 
 
@@ -44,21 +34,72 @@ int MCP4725::setAddress(unsigned char addr)
     return 0;
 }
 
-int MCP4725::writeDevice(float voltage)
+
+int MCP4725::setControl(unsigned char control)
 {
-    return writeDevice((int)(voltage / 5.0 * 4095));
+    if (control > 7) {
+        std::cerr << "MCP4725::" << __func__ << "(): value out of range" << std::endl;
+        return -1;
+    }
+
+    mControl = control;
+
+    return 0;
+}
+
+int MCP4725::setPowerDown(unsigned char power)
+{
+    if (power > 3) {
+        std::cerr << "MCP4725::" << __func__ << "(): value out of range" << std::endl;
+        return -1;
+    }
+
+    mPowerDown = power;
+
+    return 0;
 }
 
 
-int MCP4725::writeDevice(int value)
+int MCP4725::writeDevice(unsigned short value)
 {
-    /// set the 12 bits on dac, c2 and c1 = 0 and pd1 and pd0 = 0
-    mBuffer[0] = ((value & 0xFF00) >> 8) & 0x0F;        /// [C2 C1 PD1 PD0 D11 D10 D9 D8]
-    mBuffer[1] = (value & 0x00FF);                      /// [D7 D6 D5  D4  D3  D2  D1 D0]
-    //printf("mBuffer [0]: 0x%02x 0x%02x\n", mBuffer[0], mBuffer[1]);
+    int bytes = 0;
 
-    int status = write(mFd, mBuffer, 2);
-    if (status != 2) {
+    switch (mControl) {
+    case 0:
+    case 1:
+        std::cout << "case 0, 1" << std::endl;
+        /// [C2 C1 PD1 PD0 D11 D10 D9 D8]
+        mBuffer[0] = ((mControl & 0x06) << 6) | ((mPowerDown & 0x03) << 4) | ((value & 0xFF00) >> 8) & 0x0F;
+
+        /// [D7 D6 D5  D4  D3  D2  D1 D0]
+        mBuffer[1] = (value & 0x00FF);
+        bytes = 2;
+        break;
+    case 2:
+    case 3:
+        std::cout << "case 2, 3" << std::endl;
+        /// set the 12 bits on dac, c2 and c1 = 0 and pd1 and pd0 = 0
+        mBuffer[0] = ((mControl & 0x07) << 5) | ((mPowerDown & 0x03) << 1); /// [C2 C1 C0 X X PD1 PD0 X ]
+        mBuffer[1] = ((value & 0x00000ff0) >> 4);                           /// [D11 D10 D9 D8 D7 D6  D5  D4]
+        mBuffer[2] = (value & 0x0000000f) << 4;                             /// [D3  D2  D1 D0  X  X   X   X]
+        bytes = 3;
+        break;
+    }
+
+    if (mDebug) {
+        Binary binary;
+        std::cout << "MCP4725::" << __func__  << "(): Buffer 0 ";
+        binary.printByteAsBinary(mBuffer[0]);
+        std::cout << "MCP4725::" << __func__  << "(): Buffer 1 ";
+        binary.printByteAsBinary(mBuffer[1]);
+        if (bytes == 3) {
+            std::cout << "MCP4725::" << __func__  << "(): Buffer 2 ";
+            binary.printByteAsBinary(mBuffer[2]);
+        }
+    }
+
+    int status = write(mFd, mBuffer, bytes);
+    if (status != bytes) {
         std::cerr << "MCP4725::" << __func__ << "(): write failed with error " << status << std::endl;
         return -1;
     }
@@ -67,76 +108,57 @@ int MCP4725::writeDevice(int value)
 }
 
 
-int MCP4725::writeDeviceEeprom(float voltage)
+int MCP4725::readDevice(unsigned char *config, unsigned short *dac, unsigned char bytes)
 {
-    return writeDeviceEeprom((int)(voltage / 5.0 * 4095));
-}
+    if (bytes < 3)
+        bytes = 3;
 
-
-int MCP4725::writeDeviceEeprom(int value)
-{
-    /// C2 = 0 C1 = 1 C0 = 1 (write eeprom) PD1 = 0 and PD0 = 0
-    mBuffer[0] = 0b01100000;          /// [C2  C1  C0  X  X PD1 PD0  X]
-    mBuffer[1] = ((value & 0x00000ff0) >> 4);  /// [D11 D10 D9 D8 D7 D6  D5  D4]
-    mBuffer[2] = (value & 0x0000000F) << 4;    /// [D3  D2  D1 D0  X  X   X   X]
-    //printf("0x%02x 0x%02x 0x%02x\n", mBuffer[0], mBuffer[1], mBuffer[2]);
-
-    /// write the i2c device
-    int status = write(mFd, mBuffer, 3);
-    if (status != 3) {
-        std::cerr << "MCP4725::" << __func__ << "(): write failed with error " << status << std::endl;
-        return -1;
-    }
-
-    return 0;
-}
-
-int MCP4725::readDevice()
-{
     /// read the i2c device
-    int status = read(mFd, mBuffer, 3);
-    if (status != 3) {
+    int status = read(mFd, mBuffer, bytes);
+    if (status != bytes) {
         std::cerr << "MCP4725::" << __func__ << "(): read failed with error " << status << std::endl;
         return -1;
     }
 
-    mConfig = (mBuffer[0] << 16) | (mBuffer[1] << 8) | mBuffer[2];
+    *config = mBuffer[0];
+    *dac = (mBuffer[1] << 4) | (mBuffer[2] >> 4);
 
-    if (mDebug) std::cout << "MCP4725::" << __func__ << "(): " << mConfig << std::endl;
-
-    return 0;
-}
-
-void MCP4725::status(void)
-{
-    if (mConfig == -1) {
-        std::cerr << __func__ << ": config not set" << std::endl;
-        return;
+    if (mDebug) {
+        Binary binary;
+        for (int i = 0; i < bytes; i++) {
+            std::cout << i << " ";
+            binary.printByteAsBinary(mBuffer[i]);
+        }
     }
 
-    if (mConfig & 0x00008000)
-        //if (mBuffer[0] & 0x80)
+    return 0;
+
+}
+
+
+void MCP4725::resolveConfig(unsigned char config)
+{
+    if (config & Busy)
         std::cout << "  * EPROM WRITE READY" << std::endl;
     else
         std::cout << "  * EPROM WRITE BUSY" << std::endl;
 
-    if (mConfig && 0x00004000)
-        //if (mBuffer[0] & 0x40)
+    if (config && Por)
         std::cout << "  * POR on" << std::endl;
     else
         std::cout << "  * POR off" << std::endl;
 
-    if (mConfig & 0x00000400)
-        //if (mBuffer[0] & 0x04)
-        std::cout << "  * PD1 is hi" << std::endl;
+    std::cout << "  * PD1 PD0 ";
+    if (config & Pd1)
+        std::cout << "1 ";
     else
-        std::cout << "  * PD1 is lo" << std::endl;
+        std::cout << "0 ";
 
-    if (mConfig & 0x00000200)
-        //if (mBuffer[0] & 0x02)
-        std::cout << "  * PD0 is hi" << std::endl;
+    if (config & Pd0)
+        std::cout << "1 ";
     else
-        std::cout << "  * PD0 is lo" << std::endl;
+        std::cout << "0 ";
+    std::cout << std::endl;
 
-    mConfig = -1;
+    return;
 }
