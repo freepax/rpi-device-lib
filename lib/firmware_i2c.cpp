@@ -39,7 +39,9 @@ int Firmware_I2C::openDevice()
         closeDevice();
 
     /// Open I2C device
-    if (mDebug) std::cout << __func__ << "opening deive " << mDevice << std::endl;
+    if (mDebug)
+        std::cout << "Firmware_I2C::" << __func__ << "(): opening device " << mDevice << std::endl;
+
     mFd = open(mDevice, O_RDWR);
     if (mFd < 0) {
         std::cerr << __func__ << "(): openI2C failed with error " << mFd << std::endl;
@@ -47,12 +49,12 @@ int Firmware_I2C::openDevice()
     }
 
     if (mDebug) {
-        std::cout <<  "Firmware_I2C::" << __func__ << "(): setting address" << std::endl;
+        std::cout <<  "Firmware_I2C::" << __func__ << "(): setting address ";
         Binary binary;
         binary.printByteAsBinary(mAddress);
     }
 
-    /// Set MP address on i2c device
+    /// Set i2c bus address on i2c device
     int status = ioctl(mFd, I2C_SLAVE, mAddress);
     if (status < 0) {
         std::cerr << __func__ << "(): ioctl failed with error " << status << std::endl;
