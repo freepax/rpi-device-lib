@@ -16,7 +16,7 @@ static const char *i2c_6 = "/dev/i2c-6";
 static const char *i2c_7 = "/dev/i2c-7";
 }
 
-static const int BufferSize = 16;
+static const int BufferSize = 128;
 
 class Firmware_I2C
 {
