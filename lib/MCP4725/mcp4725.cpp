@@ -67,7 +67,7 @@ int MCP4725::writeDevice(unsigned short value)
     switch (mControl) {
     case 0:
     case 1:
-        std::cout << "case 0, 1" << std::endl;
+        //std::cout << "case 0, 1" << std::endl;
         /// [C2 C1 PD1 PD0 D11 D10 D9 D8]
         mBuffer[0] = ((mControl & 0x06) << 6) | ((mPowerDown & 0x03) << 4) | ((value & 0xFF00) >> 8) & 0x0F;
 
@@ -77,7 +77,7 @@ int MCP4725::writeDevice(unsigned short value)
         break;
     case 2:
     case 3:
-        std::cout << "case 2, 3" << std::endl;
+        //std::cout << "case 2, 3" << std::endl;
         /// set the 12 bits on dac, c2 and c1 = 0 and pd1 and pd0 = 0
         mBuffer[0] = ((mControl & 0x07) << 5) | ((mPowerDown & 0x03) << 1); /// [C2 C1 C0 X X PD1 PD0 X ]
         mBuffer[1] = ((value & 0x00000ff0) >> 4);                           /// [D11 D10 D9 D8 D7 D6  D5  D4]
