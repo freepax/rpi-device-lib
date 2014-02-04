@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     MCP4725 mcp4725;
 
     /// turn debuging on
-    mcp4725.setDebug(true);
+    mcp4725.setDebug(false);
 
     /// set device
     if (mcp4725.setDevice((char*)FirmwareI2CDeviceses::i2c_1) < 0) {
@@ -36,14 +36,14 @@ int main(int argc, char **argv)
     }
 
     /// set device i2c bus address
-    if (mcp4725.setAddress(Mcp4725Addresses::Mcp4725Address0) < 0) {
+    if (mcp4725.setAddress(Mcp4725Addresses::Mcp4725Address1) < 0) {
         std::cerr << __func__ << "(): setDevice failed" << std::endl;
         mcp4725.closeDevice();
         return 0;
     }
 
     /// print address in binary
-    if (true) {
+    if (false) {
         std::cout << "address " << std::endl;
         Binary binary;
         binary.printByteAsBinary(mcp4725.address());
