@@ -14,9 +14,9 @@ int main(int argc, char **argv)
     /// check if we got som input
     if (argc > 1) {
         if (strlen(argv[1]) == 3)
-            binary.printByteAsBinary(atoi(argv[1]));
+            binary.printByteAsBinary("Binary argument", atoi(argv[1]));
         else
-            binary.printIntAsBinary(atoi(argv[1]));
+            binary.printIntAsBinary("Binary argument ", atoi(argv[1]));
     }
 
     std::cout << "Testing printIntAsBinary" << std::endl;
