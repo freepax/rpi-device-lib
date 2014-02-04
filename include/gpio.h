@@ -74,6 +74,8 @@ public:
     /// set value on gpio
     void setGpio(int pin, int value);
 
+    void setDebug(bool debug) { mDebug = debug; }
+
 private:
     int mFd;
     unsigned *mGpio;
