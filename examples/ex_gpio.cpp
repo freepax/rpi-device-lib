@@ -19,9 +19,10 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    /// set all gpio's as output - skip Gpio2 - this is i2c SCL
+    /// set all gpio's as output - skip Gpio2 (i2c SCL) and Gpio3 (i2c data)
     for (int i = 0; i < GPIO::GpioSize; i++) {
-        if (GPIO::GpioList[i] == GPIO::Gpio2) continue;
+        if (GPIO::GpioList[i] == GPIO::Gpio2) continue;                 /// i2c scl
+        if (GPIO::GpioList[i] == GPIO::Gpio3) continue;                 /// i2c data
         gpio.setGpioDirection(GPIO::GpioList[i], GPIO::GpioOutput);
     }
 
@@ -34,6 +35,7 @@ int main(int argc, char **argv)
         std::cout << "Turning all gpio's on" << std::endl;
         for (int i = 0; i < GPIO::GpioSize; i++) {
             if (GPIO::GpioList[i] == GPIO::Gpio2) continue;
+            if (GPIO::GpioList[i] == GPIO::Gpio3) continue;
             gpio.setGpio(GPIO::GpioList[i], GPIO::GpioOn);
         }
 
@@ -44,6 +46,7 @@ int main(int argc, char **argv)
         std::cout << "Turning all gpio's off" << std::endl;
         for (int i = 0; i < GPIO::GpioSize; i++) {
             if (GPIO::GpioList[i] == GPIO::Gpio2) continue;
+            if (GPIO::GpioList[i] == GPIO::Gpio3) continue;
             gpio.setGpio(GPIO::GpioList[i], GPIO::GpioOff);
         }
     }
