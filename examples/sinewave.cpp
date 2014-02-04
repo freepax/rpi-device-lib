@@ -13,7 +13,13 @@ int main(int argc, char **argv)
 
     /// create and MCP4725 instance - make sure to use the right device ("/dev/i2c-1")
     MCP4725 mcp4725((char*)FirmwareI2CDeviceses::i2c_1);
+
     //mcp4725.setDebug(true);
+
+    if (mcp4725.setAddress(Mcp4725Addresses::Mcp4725Address1) < 0) {
+        std::cerr << __func__ << "(): setAddress failed" << std::endl;
+        return 0;
+    }
 
     if (mcp4725.openDevice() < 0) {
         std::cerr << __func__ << "failed to open mcp4725 device" << std::endl;
