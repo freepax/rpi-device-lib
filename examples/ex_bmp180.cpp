@@ -5,66 +5,37 @@
 
 #include <bmp180.h>
 
+
+unsigned char oss_mode = ModeOss0;
+
+
 int main(int argc, char **argv)
 {
+    long pressure = 0;
+    float temperatur = 0.0;
+
     Bmp180 bmp180((char*)FirmwareI2CDeviceses::i2c_1);
-    //printf("%s(): address 0x%2x\n", __func__, bmp180.address());
-
-    bmp180.setDebug(false);
-
 
     if (bmp180.openDevice() < 0)
-        return 0;
+        return -1;
 
-    if (bmp180.initialize() < 0)
-        return 0;
+    int id = bmp180.readChipId();
+    if (id < 0)
+        return -2;
 
-    bmp180.setDebug(false);
+    std::cout << "Chip ID 0x" << std::hex << id << std::endl;
+    printf("Chip ID: 0x%02x\n", (char)id);
 
-#if 1
-    float min_temp = 999999.0;
-    float max_temp = 0.0;
-    for (int i = 0; i < 255; i++) {
-        if (bmp180.readTemperatur() < 0)
+    for (int i = 0; i < 10; i++) {
+        if (bmp180.readTemperatur(&temperatur) < 0)
+            return -1;
+
+        std::cout << "Temperatur " << temperatur << std::endl;
+
+        if (bmp180.readPressure(&pressure, oss_mode, true) < 0)
             return 0;
-
-        if (bmp180.temperatur() < min_temp)
-            min_temp = bmp180.temperatur();
-        if (bmp180.temperatur() > max_temp)
-            max_temp = bmp180.temperatur();
-
-        printf("%4.2f\t", bmp180.temperatur());
-        fflush(0);
-
-        if (i % 20 == 0)
-          printf("\n");
+        std::cout << "Pressure " << std::dec << pressure << " Altitude " << altitude(pressure, 99750) << std::endl;
     }
-    printf("\n");
-    printf("min %4.2f max %4.2f avarage %4.2f\n", min_temp, max_temp, (min_temp + max_temp) / 2.0);
-#endif
-
-#if 1
-    double alt[255];
-    double max = 0.0;
-    double min = 99999.0;
-
-    for (int i = 0; i < 255; i++) {
-        alt[i] = altitude(bmp180.readPressure(), P0AtSea);
-        if (alt[i] > max)
-            max = alt[i];
-        if (alt[i] < min)
-            min = alt[i];
-        printf("%4.2f\t", alt[i]);
-        fflush(0);
-        //usleep(10000);
-        if (i % 20 == 0)
-            printf("\n");
-    }
-    printf("\n");
-    printf("min %4.2f max %4.2f avarage %4.2f\n", min, max, (min + max) / 2.0);
-#endif
-
-    bmp180.setDebug(false);
 
     if (bmp180.closeDevice() < 0)
         return 0;

@@ -10,9 +10,7 @@
 MCP4725::MCP4725(char *device, unsigned char address) :
     Firmware_I2C(device, address),
     mControl(Mcp4725Config::ConfigFast1),
-    mPowerDown(Mcp4725Power::PowerNormal)
-{
-}
+    mPowerDown(Mcp4725Power::PowerNormal) {}
 
 
 int MCP4725::setAddress(unsigned char addr)
@@ -24,9 +22,9 @@ int MCP4725::setAddress(unsigned char addr)
     }
 
     if (mDebug) {
-        std::cout << "MCP4725::" << __func__ << "(): setting address " << std::endl;
+        std::cout << "MCP4725::" << __func__ << "(): ";
         Binary binary;
-        binary.printByteAsBinary(addr);
+        binary.printByteAsBinary("Setting address ", addr);
     }
 
     mAddress = addr;
@@ -46,6 +44,7 @@ int MCP4725::setControl(unsigned char control)
 
     return 0;
 }
+
 
 int MCP4725::setPowerDown(unsigned char power)
 {
@@ -88,16 +87,17 @@ int MCP4725::writeDevice(unsigned short value)
 
     if (mDebug) {
         Binary binary;
-        std::cout << "MCP4725::" << __func__  << "(): Buffer 0 ";
-        binary.printByteAsBinary(mBuffer[0]);
-        std::cout << "MCP4725::" << __func__  << "(): Buffer 1 ";
-        binary.printByteAsBinary(mBuffer[1]);
+        std::cout << "MCP4725::" << __func__  << "(): ";
+        binary.printByteAsBinary("Buffer 0 ", mBuffer[0]);
+        std::cout << "MCP4725::" << __func__  << "(): ";
+        binary.printByteAsBinary("Buffer 1 ", mBuffer[1]);
         if (bytes == 3) {
-            std::cout << "MCP4725::" << __func__  << "(): Buffer 2 ";
-            binary.printByteAsBinary(mBuffer[2]);
+            std::cout << "MCP4725::" << __func__  << "(): ";
+            binary.printByteAsBinary("Buffer 2 ", mBuffer[2]);
         }
     }
 
+    /// write device
     int status = write(mFd, mBuffer, bytes);
     if (status != bytes) {
         std::cerr << "MCP4725::" << __func__ << "(): write failed with error " << status << std::endl;
@@ -126,8 +126,8 @@ int MCP4725::readDevice(unsigned char *config, unsigned short *dac, unsigned cha
     if (mDebug) {
         Binary binary;
         for (int i = 0; i < bytes; i++) {
-            std::cout << i << " ";
-            binary.printByteAsBinary(mBuffer[i]);
+            //std::cout << i << " ";
+            binary.printByteAsBinary(" ", mBuffer[i]);
         }
     }
 

@@ -16,7 +16,7 @@ static const char *i2c_6 = "/dev/i2c-6";
 static const char *i2c_7 = "/dev/i2c-7";
 }
 
-static const int BufferSize = 128;
+static const int BufferSize = 2048;
 
 class Firmware_I2C
 {
@@ -30,13 +30,17 @@ public:
     int openDevice();
     int closeDevice();
 
+    int writeData(unsigned char *data, int size);
+    int readData(unsigned char *data, int size);
+
     int setDevice(char *device);
     char *device(void) { return mDevice; }
 
     unsigned char address() { return mAddress; }
+    const int fd() const { return mFd; }
 
     void setDebug(bool debug) { mDebug = debug; }
-    bool debug(void) { return mDebug; }
+    const bool debug(void) const { return mDebug; }
 
 
 protected:
@@ -50,7 +54,7 @@ protected:
     unsigned char mAddress;
 
     /// buffer for data traffic
-    char mBuffer[BufferSize];
+    unsigned char mBuffer[BufferSize];
 
     /// debugging
     bool mDebug;

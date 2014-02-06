@@ -4,28 +4,15 @@
 #include <firmware_i2c.h>
 
 
-namespace BMP180 {
-static const unsigned char I2cAddress               = 0b01110111;
-
-static const unsigned char ControlRegisterAddress   = 0xF4;
-static const unsigned char EEPromStartAddress       = 0xAA;
-static const unsigned char EEPromEndAddress         = 0xBF;
-static const unsigned char ConvertedValueLsb        = 0xF7;
-static const unsigned char ConvertedValueMsb        = 0xF6;
-static const unsigned char ConvertedValueXLsb       = 0xF8;
-
-static const unsigned char TemperaturConfig         = 0x2E;     /// max conversion time  4.5 ms
-static const unsigned char PressureOss0             = 0x34;     /// max conversion time  4.5 ms
-static const unsigned char PressureOss1             = 0x74;     /// max conversion time  7.5 ms
-static const unsigned char PressureOss2             = 0xB4;     /// max conversion time 13.5 ms
-static const unsigned char PressureOss3             = 0xF4;     /// max conversion time 25.5 ms
-}
-
+/// nominal pressure at sea level in Pa (not hPa)
 static const long P0AtSea = 101325;
 
+
+/// calculate altitude from give pressure and P0 (both Pa)
 double altitude(long pa, long p0);
 
 
+/// OSS modes
 enum OssMode {
     ModeOss0,
     ModeOss1,
@@ -34,9 +21,32 @@ enum OssMode {
 };
 
 
-typedef struct bmp_calck_t {
+namespace BMP180 {
+static const unsigned char I2cAddress               = 0b01110111;
+
+static const unsigned char ControlRegisterAddress   = 0xF4;
+
+static const unsigned char ChipIdAddress            = 0xD0;
+
+static const unsigned char EEPromStartAddress       = 0xAA;
+static const unsigned char EEPromEndAddress         = 0xBF;
+
+static const unsigned char ConvertedValueMsb        = 0xF6;
+static const unsigned char ConvertedValueLsb        = 0xF7;
+static const unsigned char ConvertedValueXLsb       = 0xF8;
+
+static const unsigned char TemperaturConfig         = 0x2E;     /// max conversion time  4.5 ms
+
+static const unsigned char PressureOss0             = 0x34;     /// max conversion time  4.5 ms
+static const unsigned char PressureOss1             = 0x74;     /// max conversion time  7.5 ms
+static const unsigned char PressureOss2             = 0xB4;     /// max conversion time 13.5 ms
+static const unsigned char PressureOss3             = 0xF4;     /// max conversion time 25.5 ms
+}
+
+
+typedef struct bmp_calck_s {
     long UT;
-    long UP;
+    unsigned long UP;
     long x1;
     long x2;
     long x3;
@@ -46,24 +56,10 @@ typedef struct bmp_calck_t {
     long b6;
     unsigned long b7;
     long p;
-} bmp_calck_s;
+} bmp_calck_t;
 
-class Bmp180 : public Firmware_I2C
-{
-public:
-    Bmp180(char *device = (char*)FirmwareI2CDeviceses::i2c_0, unsigned char address = BMP180::I2cAddress);
 
-    int setResolution();
-    int initialize();
-
-    int readTemperatur();
-    float temperatur() { return mTemperatur; }
-    long pressure() const { return mPressure; }
-    long readPressure(int mode = ModeOss0, bool readtemp = true);
-
-    unsigned char address() { return mAddress; }
-
-private:
+typedef struct bmp_calibration_s {
     short mAc1;
     short mAc2;
     short mAc3;
@@ -75,11 +71,30 @@ private:
     short mMb;
     short mMc;
     short mMd;
+} bmp_calibration_t;
 
-    float mTemperatur;
-    long mPressure;
 
-    bmp_calck_s mCalc;
+class Bmp180 : public Firmware_I2C
+{
+public:
+    Bmp180(char *device = (char*)FirmwareI2CDeviceses::i2c_0, unsigned char address = BMP180::I2cAddress);
+
+    unsigned char address() { return mAddress; }
+
+    int openDevice();
+
+    int readChipId();
+
+    int readTemperatur(float *temperatur);
+    int readPressure(long *pascal, int oss = ModeOss3, bool update_temperatur = true);
+
+
+private:
+    int readTemperatur();
+    int readPressure(int oss, bool update_temperatur);
+
+    bmp_calck_t mCalc;
+    bmp_calibration_t mCalibration;
 };
 
 #endif /// BMP180_H

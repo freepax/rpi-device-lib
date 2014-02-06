@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -9,93 +10,89 @@
 #include <binary.h>
 
 
+/// ctor
 Bmp180::Bmp180(char *device, unsigned char address) : Firmware_I2C(device, address) { }
 
-int Bmp180::setResolution()
+
+int Bmp180::openDevice()
 {
+    /// openDevice in firmware_i2c open's the i2c device and set's the slave address (ioctl)
+    if (Firmware_I2C::openDevice() < 0)
+        return -1;
 
-    return 0;
-}
+    unsigned char buffer[22] = { BMP180::EEPromStartAddress };
 
-int Bmp180::initialize()
-{
-    mBuffer[0] = BMP180::EEPromStartAddress;        /// eeprom start address
-
-    if (mDebug) {
-        Binary binary;
-        binary.printByteAsBinary("EEProm start address", mBuffer[0]);
-    }
-
-    int status = write(mFd, mBuffer, 1);
-    if (status != 1) {
-        std::cerr << "Bmp180::"<< __func__ << "(): write failed " << status << std::endl;
+    /// write start address
+    if (writeData(buffer, 1) < 0)
         return -2;
-    }
 
-    status = read(mFd, mBuffer, 22);
-    if (status != 22) {
-        std::cerr << "Bmp180::"<< __func__ << "(): read failed " << status << std::endl;
+    /// read 22 bytes of calibration data
+    if (readData(buffer, 22) < 0)
         return -3;
-    }
 
-    /// sanity check
-    for (int i = 0; i < 22; i+=2) {
-        short temp = mBuffer[i] << 8 | mBuffer[i+1];
+    /// sanity check - no word should be 0xffff or 0x0000
+    for (int i = 0; i < 22; i += 2) {
+
+        /// shift in to 16 bit words and check
+        short temp = ((buffer[i] & 0x00ff) << 8 | (buffer[i+1] & 0x00ff));
         if (temp == 0x0000 || temp == 0xffff) {
             std::cout << "Bmp180::" << __func__ << "(): Calibration error in byte " << i << " and " << i + 1 << std::endl;
             return -4;
         }
     }
 
-    mAc1 = mBuffer[0] << 8 | mBuffer[1];
-    mAc2 = mBuffer[2] << 8 | mBuffer[3];
-    mAc3 = mBuffer[4] << 8 | mBuffer[5];
-    mAc4 = mBuffer[6] << 8 | mBuffer[7];
-    mAc5 = mBuffer[8] << 8 | mBuffer[9];
-    mAc6 = mBuffer[10] << 8 | mBuffer[11];
-
-    mB1 = mBuffer[12] << 8 | mBuffer[13];
-    mB1 = mBuffer[14] << 8 | mBuffer[15];
-
-    mMb = mBuffer[16] << 8 | mBuffer[17];
-    mMc = mBuffer[18] << 8 | mBuffer[19];
-    mMd = mBuffer[20] << 8 | mBuffer[21];
+    /// shift in to 16 bit words
+    mCalibration.mAc1 = buffer[0]  << 8 | buffer[1];
+    mCalibration.mAc2 = buffer[2]  << 8 | buffer[3];
+    mCalibration.mAc3 = buffer[4]  << 8 | buffer[5];
+    mCalibration.mAc4 = buffer[6]  << 8 | buffer[7];
+    mCalibration.mAc5 = buffer[8]  << 8 | buffer[9];
+    mCalibration.mAc6 = buffer[10] << 8 | buffer[11];
+    mCalibration.mB1  = buffer[12] << 8 | buffer[13];
+    mCalibration.mB2  = buffer[14] << 8 | buffer[15];
+    mCalibration.mMb  = buffer[16] << 8 | buffer[17];
+    mCalibration.mMc  = buffer[18] << 8 | buffer[19];
+    mCalibration.mMd  = buffer[20] << 8 | buffer[21];
 
     if (mDebug) {
-        Binary binary;
-        //for (int i = 0; i < 22; i++)
-        //  binary.printByteAsBinary("buffer 0", mBuffer[i]);
-
-        binary.printShortAsBinary("AC1", mAc1);
-        binary.printShortAsBinary("AC2", mAc2);
-        binary.printShortAsBinary("AC3", mAc3);
-        binary.printShortAsBinary("AC4", mAc4);
-        binary.printShortAsBinary("AC5", mAc5);
-        binary.printShortAsBinary("AC6", mAc6);
-
-        binary.printShortAsBinary("MB1", mB1);
-        binary.printShortAsBinary("MB2", mB2);
-
-        binary.printShortAsBinary("MB", mMb);
-        binary.printShortAsBinary("MC", mMc);
-        binary.printShortAsBinary("MD", mMd);
+        std::cout << "AC1  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mAc1 << std::endl;
+        std::cout << "AC2  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mAc2 << std::endl;
+        std::cout << "AC3  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mAc3 << std::endl;
+        std::cout << "AC4  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mAc4 << std::endl;
+        std::cout << "AC5  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mAc3 << std::endl;
+        std::cout << "AC6  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mAc6 << std::endl;
+        std::cout << "B1   0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mB1 << std::endl;
+        std::cout << "B2   0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mB2 << std::endl;
+        std::cout << "MB   0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mMb << std::endl;
+        std::cout << "MC   0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mMc << std::endl;
+        std::cout << "MD   0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.mMd << std::endl;
     }
 
-    if (0) {
-        printf("AC1 %d\n", mAc1);
-        printf("AC2 %d\n", mAc2);
-        printf("AC3 %d\n", mAc3);
-        printf("AC4 %d\n", mAc4);
-        printf("AC5 %d\n", mAc5);
-        printf("AC6 %d\n", mAc6);
+    return 0;
+}
 
-        printf("B1 %d\n", mB1);
-        printf("B2 %d\n", mB2);
+int Bmp180::readChipId()
+{
+    /// write chip ID chip-address
+    unsigned char buffer[1] = { BMP180::ChipIdAddress };
+    if (writeData(buffer, 1) < 0)
+        return -1;
 
-        printf("MB %d\n", mMb);
-        printf("MC %d\n", mMc);
-        printf("MD %d\n", mMd);
-    }
+    /// read chip ID
+    if (readData(buffer, 1) < 0)
+        return -2;
+
+    /// return chip ID
+    return buffer[0];
+}
+
+
+int Bmp180::readTemperatur(float *temperatur)
+{
+    if (readTemperatur() < 0)
+        return -1;
+
+    *temperatur = (float)(mCalc.b5 + 8) / 16.0 / 10.0;
 
     return 0;
 }
@@ -103,109 +100,81 @@ int Bmp180::initialize()
 
 int Bmp180::readTemperatur()
 {
-    mBuffer[0] = BMP180::ControlRegisterAddress;        /// register to be written
-    mBuffer[1] = BMP180::TemperaturConfig;              /// value to be written to register
-
-    if (mDebug){
-        Binary binary;
-        binary.printByteAsBinary("ControlRegisterAddress", mBuffer[0]);
-        binary.printByteAsBinary("Temperatur config     ", mBuffer[1]);
-    }
-
-    int status = write(mFd, mBuffer, 2);
-    if (status != 2) {
-        std::cerr << "Bmp180::"<< __func__ << "(): write failed " << status << std::endl;
+    /// setup for temperatur measurement
+    unsigned char buffer[] = { BMP180::ControlRegisterAddress, BMP180::TemperaturConfig };
+    if (writeData(buffer, 2) < 0)
         return -1;
-    }
 
+    /// sleep for 4.5 ms
     usleep(4500);
 
-    mBuffer[0] = BMP180::ConvertedValueMsb;        /// read Convert Register (read 2 bytes: msb + lsb)
-
-    if (mDebug) {
-        Binary binary;
-        binary.printByteAsBinary("Converted Value MSB register address", mBuffer[0]);
-    }
-
-    status = write(mFd, mBuffer, 1);
-    if (status != 1) {
-        std::cerr << "Bmp180::"<< __func__ << "(): write failed " << status << std::endl;
+    /// set read address
+    if (writeData((unsigned char*)&BMP180::ConvertedValueMsb, 1) < 0)
         return -2;
-    }
 
-
-    status = read(mFd, mBuffer, 2);
-    if (status != 2) {
-        std::cerr << "Bmp180::"<< __func__ << "(): read failed " << status << std::endl;
+    /// read temperatur data
+    if (readData(buffer, 2) < 0)
         return -3;
-    }
 
-    if (mDebug) {
-        Binary binary;
-        binary.printByteAsBinary("buffer 0", mBuffer[0]);
-        binary.printByteAsBinary("buffer 1", mBuffer[1]);
-    }
-
-    mCalc.UT = mBuffer[0] << 8 | mBuffer[1];
-    mCalc.x1 = (mCalc.UT - mAc6) * mAc5 / 32768;
-    mCalc.x2 = mMc * 2048 / (mCalc.x1 + mMd);
+    /// calculate temperatur
+    mCalc.UT = buffer[0] << 8 | buffer[1];
+    mCalc.x1 = (mCalc.UT - mCalibration.mAc6) * mCalibration.mAc5 / 32768;
+    mCalc.x2 = mCalibration.mMc * 2048 / (mCalc.x1 + mCalibration.mMd);
     mCalc.b5 = mCalc.x1 + mCalc.x2;
-
-    mTemperatur = (float)(mCalc.b5 + 8) / 16.0 / 10.0;
 
     if (mDebug) {
         printf("UT          %d\n", mCalc.UT);
-        printf("X1          %d\n", mCalc. x1);
+        printf("X1          %d\n", mCalc.x1);
         printf("X2          %d\n", mCalc.x2);
         printf("B5          %d\n", mCalc.b5);
-        printf("Temperatur  %4.2f celcius\n");
         printf("\n");
     }
-
-    if (mDebug) printf("Temeratur %3.1f\n", mTemperatur);
 
     return 0;
 }
 
 
-long Bmp180::readPressure(int oss, bool readtemp)
+int Bmp180::readPressure(long *pascal, int oss, bool update_temperatur)
+{
+    if (readPressure(oss, update_temperatur) < 0)
+        return -1;
+
+    *pascal = mCalc.p;
+
+    return 0;
+}
+
+
+int Bmp180::readPressure(int oss, bool update_temperatur)
 {
     /// make sure requested oss is reasonable
-    if (ModeOss0 < 0 || oss > ModeOss3)
-        oss = ModeOss0;
+    if (ModeOss0 < 0 || oss > ModeOss3) {
+        std::cerr << "Bmp180::" << __func__ << "(): invalid oss " << oss << std::endl;
+        return -1;
+    }
 
-    /// read temperatur if requested
-    if (readtemp) {
+    /// read temperatur if requested (If old temp measurement is older that 1 sec. do a new temp reading)
+    if (update_temperatur) {
         if (readTemperatur() < 0) {
             std::cerr << "Bmp180::" << __func__ << "(): readTemperatur failed" << std::endl;
-            return -1;
+            return -2;
         }
     }
 
-    /// register to be written (ControlRegister)
-    mBuffer[0] = BMP180::ControlRegisterAddress;
+    /// need three bytes when reading back data
+    unsigned char buffer[3] = { BMP180::ControlRegisterAddress };
 
-    /// set second byte acording to oss
+    /// Hardware Accuracy Modes (see data sheet for details)
     switch (oss) {
-    case ModeOss0: mBuffer[1] = BMP180::PressureOss0; break;
-    case ModeOss1: mBuffer[1] = BMP180::PressureOss1; break;
-    case ModeOss2: mBuffer[1] = BMP180::PressureOss2; break;
-    case ModeOss3: mBuffer[1] = BMP180::PressureOss3; break;
-    default: mBuffer[1] = BMP180::PressureOss0;
+    case ModeOss0: buffer[1] = BMP180::PressureOss0; break;
+    case ModeOss1: buffer[1] = BMP180::PressureOss1; break;
+    case ModeOss2: buffer[1] = BMP180::PressureOss2; break;
+    case ModeOss3: buffer[1] = BMP180::PressureOss3; break;
+    default: buffer[1] = BMP180::PressureOss0;
     }
 
-    if (mDebug) {
-        Binary binary;
-        binary.printByteAsBinary("ControlRegisterAddress", mBuffer[0]);
-        binary.printByteAsBinary("Pressure oss 0 config ", mBuffer[1]);
-    }
-
-    /// write PressureOss_x requested to control register
-    int status = write(mFd, mBuffer, 2);
-    if (status != 2) {
-        std::cerr << "Bmp180::"<< __func__ << "(): write failed " << status << std::endl;
+    if (writeData(buffer, 2) < 0)
         return -1;
-    }
 
     /// sleep acording to oss mode
     switch (oss) {
@@ -216,30 +185,12 @@ long Bmp180::readPressure(int oss, bool readtemp)
     default: usleep(4500);
     }
 
-    /// this is the register address to the converted results (msb at this address, lsb on the next)
-    mBuffer[0] = BMP180::ConvertedValueMsb;
-
-    if (mDebug) {
-        Binary binary;
-        binary.printByteAsBinary("Converted Value MSB register address", mBuffer[0]);
-    }
-
-    /// write address
-    status = write(mFd, mBuffer, 1);
-    if (status != 1) {
-        std::cerr << "Bmp180::"<< __func__ << "(): write failed " << status << std::endl;
+    buffer[0] = BMP180::ConvertedValueMsb;
+    if (readData(buffer, 1) < 0)
         return -2;
-    }
 
-
-    /// read result
-    //status = read(mFd, mBuffer, 3);
-    //if (status != 3) {
-    status = read(mFd, mBuffer, 2);
-    if (status != 2) {
-        std::cerr << "Bmp180::"<< __func__ << "(): read failed " << status << std::endl;
+    if (readData(buffer, 3) < 0)
         return -3;
-    }
 
     if (mDebug) {
         Binary binary;
@@ -249,38 +200,41 @@ long Bmp180::readPressure(int oss, bool readtemp)
     }
 
     /// do the pressure calculation
-    //mCalc.UP = (mBuffer[0] << 16) | (mBuffer[1] << 8) | (mBuffer[2] >> (8 - oss));
-    mCalc.UP = (mBuffer[0] << 8) | (mBuffer[1]);
+    mCalc.UP = (unsigned long)(buffer[0] << 16) | (unsigned long)(buffer[1] << 8) | (unsigned long)(buffer[2] >> (8 - oss));
     if (mDebug) printf("UP %d\n", mCalc.UP);
 
     mCalc.b6 = mCalc.b5 - 4000;
     if (mDebug) printf("B6 %d\n", mCalc.b6);
 
-    mCalc.x1 = (mB2 * (mCalc.b6 * mCalc.b6 / 4096)) / 2048;
+    mCalc.x1 = (mCalibration.mB2 * (mCalc.b6 * mCalc.b6 / 4096)) / 2048;
     if (mDebug) printf("X1 %d\n", mCalc.x1);
 
-    mCalc.x2 = mAc2 * mCalc.b6 / 2048;
+    mCalc.x2 = mCalibration.mAc2 * mCalc.b6 / 2048;
     if (mDebug) printf("X2 %d\n", mCalc.x2);
 
     mCalc.x3 = mCalc.x1 + mCalc.x2;
     if (mDebug) printf("X3 %d\n", mCalc.x3);
 
-    mCalc.b3 = (((mAc1 * 4 + mCalc.x3) << oss) + 2) / 4;
+    //mCalc.b3 = ((((long)mAc1 * 4 + mCalc.x3) << oss) + 2) / 4;
+    mCalc.b3 = (((((long)mCalibration.mAc1) * 4 + mCalc.x3) << oss) + 2) >> 2;
     if (mDebug) printf("B3 %d\n", mCalc.b3);
 
-    mCalc.x1 = mAc3 * mCalc.b6 / 8192;
+    mCalc.x1 = (mCalibration.mAc3 * mCalc.b6) >> 13;
+    //mCalc.x1 = mAc3 * mCalc.b6 / 8192;
     if (mDebug) printf("X1 %d\n", mCalc.x1);
 
-    mCalc.x2 = (mB1 * (mCalc.b6 * mCalc.b6 / 4096)) / 65536;
+    mCalc.x2 = (mCalibration.mB1 * ((mCalc.b6 * mCalc.b6) >> 12)) >> 16;
+    //mCalc.x2 = (mB1 * (mCalc.b6 * mCalc.b6 / 4096)) / 65536;
     if (mDebug) printf("X2 %d\n", mCalc.x2);
 
     mCalc.x3 = (( mCalc.x1 + mCalc.x2) + 2) / 4;
     if (mDebug) printf("X3 %d\n", mCalc.x3);
 
-    mCalc.b4 = mAc4 * (unsigned long)(mCalc.x3 + 32768) / 32768;
+    mCalc.b4 = mCalibration.mAc4 * (unsigned long)(mCalc.x3 + 32768) / 32768;
     if (mDebug) printf("B4 %ul\n", mCalc.b4);
 
-    mCalc.b7 = ((unsigned long)mCalc.UP - mCalc.b3) * (50000 >> oss);
+    mCalc.b7 = ((unsigned long)(mCalc.UP - mCalc.b3) * (50000 >> oss));
+    //mCalc.b7 = ((unsigned long)mCalc.UP - mCalc.b3) * (50000 >> oss);
     if (mDebug) printf("B7 %ul\n", mCalc.b7);
 
     if (mCalc.b7 < 0x80000000)
@@ -299,15 +253,13 @@ long Bmp180::readPressure(int oss, bool readtemp)
     if (mDebug) printf("X2 %d\n", mCalc.x2);
 
     mCalc.p = mCalc.p + (mCalc.x1 + mCalc.x2 + 3791) / 16;
-    if (mDebug) printf("P  %d\n", mCalc.p);
-
-    /// back up pressure
-    mPressure = mCalc.p;
+    if (mDebug) printf("Pressure  %d Pa\n", mCalc.p);
 
     /// return the pressure
-    return mCalc.p;
+    return 0;
 }
 
+/// NONE MEMBER FUNCTION
 
 /// calculate altitude from give pressure at location and pressure at sea level
 /// (international barometric formula)

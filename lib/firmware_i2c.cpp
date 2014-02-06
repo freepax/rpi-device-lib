@@ -13,12 +13,12 @@
 #include <binary.h>
 
 
-Firmware_I2C::Firmware_I2C(char *device,unsigned char address, bool debug) : mFd(-1), mDevice(device), mAddress(address), mDebug(debug)
+Firmware_I2C::Firmware_I2C(char *device, unsigned char address, bool debug) : mFd(-1), mDevice(device), mAddress(address), mDebug(debug)
 {
     if (mDebug) {
-        std::cout << __func__ << "(): device: "<< mDevice << " addres: " << std::endl;
+        std::cout << __func__ << "(): device: "<< mDevice << " ";
         Binary binary;
-        binary.printByteAsBinary(address);
+        binary.printByteAsBinary("Address ", address);
     }
 }
 
@@ -49,15 +49,46 @@ int Firmware_I2C::openDevice()
     }
 
     if (mDebug) {
-        std::cout <<  "Firmware_I2C::" << __func__ << "(): setting address ";
+        std::cerr <<  "Firmware_I2C::" << __func__ << "(): ";
         Binary binary;
-        binary.printByteAsBinary(mAddress);
+        binary.printByteAsBinary("Address", mAddress);
+        std::cerr << std::endl;
     }
 
-    /// Set i2c bus address on i2c device
+    /// Set i2c device address in i2c driver for this session
     int status = ioctl(mFd, I2C_SLAVE, mAddress);
     if (status < 0) {
         std::cerr << __func__ << "(): ioctl failed with error " << status << std::endl;
+        return -2;
+    }
+
+    return 0;
+}
+
+
+int Firmware_I2C::writeData(unsigned char *data, int size)
+{
+    if (mDebug) {
+        Binary binary;
+        for (int i = 0; i < size; i++)
+            binary.printByteAsBinary("Data ", mBuffer[i]);
+    }
+
+    int status = write(mFd, data, size);
+    if (status < 0) {
+        std::cerr << "Firmware_I2C::" << __func__ << "(): write failed " << status << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+
+int Firmware_I2C::readData(unsigned char *data, int size)
+{
+    int status = read(mFd, data, size);
+    if (status != size) {
+        std::cerr << "Firmware_I2C::" << __func__ << "(): read failed " << status << std::endl;
         return -2;
     }
 

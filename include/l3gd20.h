@@ -124,6 +124,7 @@
   */
 
 
+
 /// two possible i2c addresses for L3GD20
 namespace L3dg20 {
 static const int L3gd20Address0 = 0b01101010;
@@ -165,7 +166,7 @@ static const int mInteruptDurationAddress        = 0b00111000;
 /// the L3GD20 register defaults
 namespace L3dg20RegistersDefaults {
 static const int mWhoDefaults                     = 0b11010100;
-static const int mControl_1Defaults               = 0b00000111;
+static const int mControl_1Defaults               = 0b00001111;
 static const int mControl_2Defaults               = 0b00000000;
 static const int mControl_3Defaults               = 0b00000000;
 static const int mControl_4Defaults               = 0b00000000;
@@ -194,6 +195,22 @@ public:
     /// set and get i2c address
     int setAddress(int);
 
+    /// Who Am I
+    int whoAmI(unsigned char *serialnumber);
+
+    /// read temperatur
+    int readTemperatur(unsigned char *temperatur);
+
+    /// read Z rotation (hi and lo byte)
+    int readZrotation(short *zrotation);
+    //int readZrotation(int *zrotation);
+
+    //int setControlOne(unsigned char dr, unsigned char bw, bool pd, bool zen, bool xen, bool yen);
+    int setControlOne();
+    int setControlTwo(unsigned char hpm, unsigned char hpc);
+    int setControlThree(bool int1_enable, bool int1_boot, bool lh_active, bool pp_open,
+                        bool data_readu_2, bool fifo_wter_2, bool fifo_over_2, bool fifo_empt_2);
+    //int setControlFour();
 
 private:
     /// L3GD20 REGISTERS
