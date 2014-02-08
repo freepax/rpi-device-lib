@@ -16,15 +16,15 @@ MCP4725::MCP4725(char *device, unsigned char address) :
 int MCP4725::setAddress(unsigned char addr)
 {
     if (addr != Mcp4725Addresses::Mcp4725Address0 && addr != Mcp4725Addresses::Mcp4725Address1) {
-        std::cerr << __func__ << "(): address given " << addr << " is not a valid MCP4725 address" << std::endl;
-        std::cerr << __func__ << "(): valid addresses are 0b01100010 and 0b01100011 " << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " address given " << addr << " is not a valid MCP4725 address" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " valid addresses are 0b01100010 and 0b01100011 " << std::endl;
         return -1;
     }
 
     if (mDebug) {
-        std::cout << "MCP4725::" << __func__ << "(): ";
+        std::cout << "MCP4725::" << __func__ << ":" << __LINE__ << " hex address 0x" << std::hex << addr << std::dec << std::endl;
         Binary binary;
-        binary.printByteAsBinary("Setting address ", addr);
+        binary.printByteAsBinary("bin address ", addr);
     }
 
     mAddress = addr;
@@ -36,7 +36,7 @@ int MCP4725::setAddress(unsigned char addr)
 int MCP4725::setControl(unsigned char control)
 {
     if (control > 7) {
-        std::cerr << "MCP4725::" << __func__ << "(): value out of range" << std::endl;
+        std::cerr << "MCP4725::" << __func__ << ":" << __LINE__ << " value out of range" << std::endl;
         return -1;
     }
 
@@ -49,7 +49,7 @@ int MCP4725::setControl(unsigned char control)
 int MCP4725::setPowerDown(unsigned char power)
 {
     if (power > 3) {
-        std::cerr << "MCP4725::" << __func__ << "(): value out of range" << std::endl;
+        std::cerr << "MCP4725::" << __func__ << ":" << __LINE__ << " value out of range" << std::endl;
         return -1;
     }
 
@@ -61,6 +61,7 @@ int MCP4725::setPowerDown(unsigned char power)
 
 int MCP4725::writeDevice(unsigned short value)
 {
+    unsigned char buffer[3];
     int bytes = 0;
 
     switch (mControl) {
@@ -68,19 +69,19 @@ int MCP4725::writeDevice(unsigned short value)
     case 1:
         //std::cout << "case 0, 1" << std::endl;
         /// [C2 C1 PD1 PD0 D11 D10 D9 D8]
-        mBuffer[0] = ((mControl & 0x06) << 6) | ((mPowerDown & 0x03) << 4) | ((value & 0xFF00) >> 8) & 0x0F;
+        buffer[0] = ((mControl & 0x06) << 6) | ((mPowerDown & 0x03) << 4) | ((value & 0xFF00) >> 8) & 0x0F;
 
         /// [D7 D6 D5  D4  D3  D2  D1 D0]
-        mBuffer[1] = (value & 0x00FF);
+        buffer[1] = (value & 0x00FF);
         bytes = 2;
         break;
     case 2:
     case 3:
         //std::cout << "case 2, 3" << std::endl;
         /// set the 12 bits on dac, c2 and c1 = 0 and pd1 and pd0 = 0
-        mBuffer[0] = ((mControl & 0x07) << 5) | ((mPowerDown & 0x03) << 1); /// [C2 C1 C0 X X PD1 PD0 X ]
-        mBuffer[1] = ((value & 0x00000ff0) >> 4);                           /// [D11 D10 D9 D8 D7 D6  D5  D4]
-        mBuffer[2] = (value & 0x0000000f) << 4;                             /// [D3  D2  D1 D0  X  X   X   X]
+        buffer[0] = ((mControl & 0x07) << 5) | ((mPowerDown & 0x03) << 1); /// [C2 C1 C0 X X PD1 PD0 X ]
+        buffer[1] = ((value & 0x00000ff0) >> 4);                           /// [D11 D10 D9 D8 D7 D6  D5  D4]
+        buffer[2] = (value & 0x0000000f) << 4;                             /// [D3  D2  D1 D0  X  X   X   X]
         bytes = 3;
         break;
     }
@@ -88,19 +89,19 @@ int MCP4725::writeDevice(unsigned short value)
     if (mDebug) {
         Binary binary;
         std::cout << "MCP4725::" << __func__  << "(): ";
-        binary.printByteAsBinary("Buffer 0 ", mBuffer[0]);
+        binary.printByteAsBinary("Buffer 0 ", buffer[0]);
         std::cout << "MCP4725::" << __func__  << "(): ";
-        binary.printByteAsBinary("Buffer 1 ", mBuffer[1]);
+        binary.printByteAsBinary("Buffer 1 ", buffer[1]);
         if (bytes == 3) {
             std::cout << "MCP4725::" << __func__  << "(): ";
-            binary.printByteAsBinary("Buffer 2 ", mBuffer[2]);
+            binary.printByteAsBinary("Buffer 2 ", buffer[2]);
         }
     }
 
     /// write device
-    int status = write(mFd, mBuffer, bytes);
+    int status = write(mFd, buffer, bytes);
     if (status != bytes) {
-        std::cerr << "MCP4725::" << __func__ << "(): write failed with error " << status << std::endl;
+        std::cerr << "MCP4725::" << __func__ << ":" << __LINE__ << " write failed with error " << status << std::endl;
         return -1;
     }
 
@@ -116,7 +117,7 @@ int MCP4725::readDevice(unsigned char *config, unsigned short *dac, unsigned cha
     /// read the i2c device
     int status = read(mFd, mBuffer, bytes);
     if (status != bytes) {
-        std::cerr << "MCP4725::" << __func__ << "(): read failed with error " << status << std::endl;
+        std::cerr << "MCP4725::" << __func__ << ":" << __LINE__ << " read failed with error " << status << std::endl;
         return -1;
     }
 

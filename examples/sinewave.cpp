@@ -17,12 +17,12 @@ int main(int argc, char **argv)
     //mcp4725.setDebug(true);
 
     if (mcp4725.setAddress(Mcp4725Addresses::Mcp4725Address1) < 0) {
-        std::cerr << __func__ << "(): setAddress failed" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " setAddress failed" << std::endl;
         return 0;
     }
 
     if (mcp4725.openDevice() < 0) {
-        std::cerr << __func__ << "failed to open mcp4725 device" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " failed to open mcp4725 device" << std::endl;
         return 0;
     }
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
         for (i = 0; i < 512; i++) {
             /// write next byte in sinewave pattern
             if (mcp4725.writeDevice(SineWave::Sinewave[i]) < 0) {
-                std::cerr << __func__ << "mcp4725::writeDevice failed" << std::endl;
+                std::cerr << __func__ << ":" << __LINE__ << " mcp4725::writeDevice failed" << std::endl;
                 goto out;
             }
             usleep(1000);

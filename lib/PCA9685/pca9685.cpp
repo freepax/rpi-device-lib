@@ -25,7 +25,7 @@ int PCA9685::setFrequency(unsigned int frequency)
 
     int status = write(mFd, mBuffer, 2);
     if (status != 2) {
-        std::cerr << "PCA9685::" << __func__ << "(): write failed with error " << status << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " write failed with error " << status << std::endl;
         return -2;
     }
 
@@ -35,17 +35,17 @@ int PCA9685::setFrequency(unsigned int frequency)
 int PCA9685::writeOutput(unsigned char output, unsigned short ontime, unsigned short offtime)
 {
     if (output > 15) {
-        std::cerr << "PCA9685::" << __func__ << "(): output out off range [0 .. 15]" << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " output out off range [0 .. 15]" << std::endl;
         return -1;
     }
 
     if (ontime > 4095) {
-        std::cerr << "PCA9685::" << __func__ << "(): ontime out of range [0 .. 4095]" << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " ontime out of range [0 .. 4095]" << std::endl;
         return -2;
     }
 
     if (offtime > 4095) {
-        std::cerr << "PCA9685::" << __func__ << "(): offtime out of range [0 .. 4095]" << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " offtime out of range [0 .. 4095]" << std::endl;
         return -3;
     }
 
@@ -63,7 +63,7 @@ int PCA9685::writeOutput(unsigned char output, unsigned short ontime, unsigned s
     mBuffer[1] = onTimeLo;
     int status = write(mFd, mBuffer, 2);
     if (status != 2) {
-        std::cerr << "PCA9685::" << __func__ << "(): write failed with error " << status << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " write failed with error " << status << std::endl;
         return -4;
     }
 
@@ -71,7 +71,7 @@ int PCA9685::writeOutput(unsigned char output, unsigned short ontime, unsigned s
     mBuffer[1] = onTimeHi;
     status = write(mFd, mBuffer, 2);
     if (status != 2) {
-        std::cerr << "PCA9685::" << __func__ << "(): write failed with error " << status << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__<< " write failed with error " << status << std::endl;
         return -5;
     }
 
@@ -79,7 +79,7 @@ int PCA9685::writeOutput(unsigned char output, unsigned short ontime, unsigned s
     mBuffer[1] = offTimeLo;
     status = write(mFd, mBuffer, 2);
     if (status != 2) {
-        std::cerr << "PCA9685::" << __func__ << "(): write failed with error " << status << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " write failed with error " << status << std::endl;
         return -6;
     }
 
@@ -87,7 +87,7 @@ int PCA9685::writeOutput(unsigned char output, unsigned short ontime, unsigned s
     mBuffer[1] = offTimeHi;
     status = write(mFd, mBuffer, 2);
     if (status != 2) {
-        std::cerr << "PCA9685::" << __func__ << "(): write failed with error " << status << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " write failed with error " << status << std::endl;
         return -7;
     }
 
@@ -98,7 +98,7 @@ int PCA9685::writeOutput(unsigned char output, unsigned short ontime, unsigned s
 int PCA9685::writeOutput(unsigned char output, int onoff, int hilo, unsigned char value)
 {
     if (output < 0 || output > 15) {
-        std::cerr << "PCA9685::" << __func__ << "(): requested output out off range (0 .. 15)" << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " requested output out off range (0 .. 15)" << std::endl;
         return -1;
     }
 
@@ -109,7 +109,7 @@ int PCA9685::writeOutput(unsigned char output, int onoff, int hilo, unsigned cha
 
     int status = write(mFd, mBuffer, 2);
     if (status != 2) {
-        std::cerr << "PCA9685::" << __func__ << "(): write failed with error " << status << std::endl;
+        std::cerr << "PCA9685::" << __func__ << ":" << __LINE__ << " write failed with error " << status << std::endl;
         return -2;
     }
 
@@ -119,24 +119,24 @@ int PCA9685::writeOutput(unsigned char output, int onoff, int hilo, unsigned cha
 
 int PCA9685::setAddress(unsigned char address)
 {
-    if (address != PCA9685Addresses::PCA9685Address0 &&
-            address != PCA9685Addresses::PCA9685Address1  &&
-            address != PCA9685Addresses::PCA9685Address2  &&
-            address != PCA9685Addresses::PCA9685Address3  &&
-            address != PCA9685Addresses::PCA9685Address4  &&
-            address != PCA9685Addresses::PCA9685Address5  &&
-            address != PCA9685Addresses::PCA9685Address6  &&
-            address != PCA9685Addresses::PCA9685Address7  &&
-            address != PCA9685Addresses::PCA9685Address8  &&
-            address != PCA9685Addresses::PCA9685Address9  &&
-            address != PCA9685Addresses::PCA9685Address10 &&
-            address != PCA9685Addresses::PCA9685Address11 &&
-            address != PCA9685Addresses::PCA9685Address12 &&
-            address != PCA9685Addresses::PCA9685Address13 &&
-            address != PCA9685Addresses::PCA9685Address14 &&
+    if (address != PCA9685Addresses::PCA9685Address0        &&
+            address != PCA9685Addresses::PCA9685Address1    &&
+            address != PCA9685Addresses::PCA9685Address2    &&
+            address != PCA9685Addresses::PCA9685Address3    &&
+            address != PCA9685Addresses::PCA9685Address4    &&
+            address != PCA9685Addresses::PCA9685Address5    &&
+            address != PCA9685Addresses::PCA9685Address6    &&
+            address != PCA9685Addresses::PCA9685Address7    &&
+            address != PCA9685Addresses::PCA9685Address8    &&
+            address != PCA9685Addresses::PCA9685Address9    &&
+            address != PCA9685Addresses::PCA9685Address10   &&
+            address != PCA9685Addresses::PCA9685Address11   &&
+            address != PCA9685Addresses::PCA9685Address12   &&
+            address != PCA9685Addresses::PCA9685Address13   &&
+            address != PCA9685Addresses::PCA9685Address14   &&
             address != PCA9685Addresses::PCA9685Address15)
     {
-        std::cout << "PCA9685::" << __func__ << "invalid address" << std::endl;
+        std::cout << "PCA9685::" << __func__ << ":" << __LINE__ << "invalid address" << std::endl;
         return -1;
     }
 

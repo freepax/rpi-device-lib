@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include <unistd.h>
-#include <stdio.h>
 
 #include <bmp180.h>
 
@@ -23,14 +22,13 @@ int main(int argc, char **argv)
     if (id < 0)
         return -2;
 
-    std::cout << "Chip ID 0x" << std::hex << id << std::endl;
-    printf("Chip ID: 0x%02x\n", (char)id);
+    std::cout << "Chip ID 0x" << std::hex << id << std::dec << std::endl;
 
     for (int i = 0; i < 10; i++) {
         if (bmp180.readTemperatur(&temperatur) < 0)
             return -1;
 
-        std::cout << "Temperatur " << temperatur << std::endl;
+        std::cout << "Temperatur " << std::dec << temperatur << std::endl;
 
         if (bmp180.readPressure(&pressure, oss_mode, true) < 0)
             return 0;

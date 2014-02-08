@@ -30,35 +30,35 @@ int main(int argc, char **argv)
 
     /// set device
     if (mcp4725.setDevice((char*)FirmwareI2CDeviceses::i2c_1) < 0) {
-        std::cerr << __func__ << "(): setDevice failed" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " setDevice failed" << std::endl;
         mcp4725.closeDevice();
         return 0;
     }
 
     /// set device i2c bus address
     if (mcp4725.setAddress(Mcp4725Addresses::Mcp4725Address1) < 0) {
-        std::cerr << __func__ << "(): setDevice failed" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " setDevice failed" << std::endl;
         mcp4725.closeDevice();
         return 0;
     }
 
     /// print address in binary
     if (false) {
-        std::cout << "address " << std::endl;
+        std::cout << "address 0x" << std::hex << mcp4725.address() << std::dec << std::endl;
         Binary binary;
         binary.printByteAsBinary(mcp4725.address());
     }
 
     /// set the control bits
     if (mcp4725.setControl(Mcp4725Config::ConfigFast1) < 0) {
-        std::cerr << __func__ << "(): setControl failed" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " setControl failed" << std::endl;
         mcp4725.closeDevice();
         return 0;
     }
 
     /// set powerdown bits
     if (mcp4725.setPowerDown(Mcp4725Power::PowerNormal) < 0) {
-        std::cerr << __func__ << "(): setControl failed" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " setControl failed" << std::endl;
         mcp4725.closeDevice();
         return 0;
     }
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     /// open the device
     int status = mcp4725.openDevice();
     if (status < 0) {
-        std::cerr << __func__  << "(): failed to open mcp4725"<< std::endl;
+        std::cerr << __func__  << ":" << __LINE__ << " failed to open mcp4725"<< std::endl;
         return 0;
     }
 
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     std::cout << "Testing writeDevice" << std::endl;
     status = mcp4725.writeDevice(value);
     if (status < 0) {
-        std::cerr << __func__  << "(): failed to write mcp4725"<< std::endl;
+        std::cerr << __func__  << "." << __LINE__ << " failed to write mcp4725"<< std::endl;
         return 0;
     }
     std::cout << "Testing writeDevice SUCCESS" << std::endl;

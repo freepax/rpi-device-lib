@@ -60,17 +60,17 @@ typedef struct bmp_calck_s {
 
 
 typedef struct bmp_calibration_s {
-    short mAc1;
-    short mAc2;
-    short mAc3;
-    unsigned short mAc4;
-    unsigned short mAc5;
-    unsigned short mAc6;
-    short mB1;
-    short mB2;
-    short mMb;
-    short mMc;
-    short mMd;
+    short ac1;
+    short ac2;
+    short ac3;
+    unsigned short ac4;
+    unsigned short ac5;
+    unsigned short ac6;
+    short b1;
+    short b2;
+    short mb;
+    short mc;
+    short md;
 } bmp_calibration_t;
 
 

@@ -133,56 +133,55 @@ static const int L3gd20Address1 = 0b01101011;
 
 
 /// the L3GD20 register addresses
-namespace L3dg20RegistersAddresses {
-static const int mWhoAddress                     = 0b00001111;
-static const int mControl_1Address               = 0b00100000;
-static const int mControl_2Address               = 0b00100001;
-static const int mControl_3Address               = 0b00100010;
-static const int mControl_4Address               = 0b00100011;
-static const int mControl_5Address               = 0b00100100;
-static const int mReferenceAddress               = 0b00100101;
-static const int mTemperaturAddress              = 0b00100110;
-static const int mStatusAddress                  = 0b00100111;
-static const int mOutXLAddress                   = 0b00101000;
-static const int mOutXHAddress                   = 0b00101001;
-static const int mOutYLAddress                   = 0b00101010;
-static const int mOutYHAddress                   = 0b00101011;
-static const int mOutZLAddress                   = 0b00101100;
-static const int mOutZHAddress                   = 0b00101101;
-static const int mFifoControlAddress             = 0b00101110;
-static const int mFifoControlSourceAddress       = 0b00101111;
-static const int mInteruptConfigureAddress       = 0b00110000;
-static const int mInteruptConfigureSourceAddress = 0b00110001;
-static const int mInteruptXHAddress              = 0b00110010;
-static const int mInteruptXLAddress              = 0b00110011;
-static const int mInteruptYHAddress              = 0b00110100;
-static const int mInteruptYLAddress              = 0b00110101;
-static const int mInteruptzHAddress              = 0b00110110;
-static const int mInteruptzlAddress              = 0b00110111;
-static const int mInteruptDurationAddress        = 0b00111000;
+namespace L3dg20Register {
+static const int WhoAddress                     = 0b00001111;
+static const int ControlOneAddress              = 0b00100000;
+static const int ControlTwoAddress              = 0b00100001;
+static const int ControlThreeAddress            = 0b00100010;
+static const int ControlFourAddress             = 0b00100011;
+static const int ControlFiveAddress             = 0b00100100;
+static const int ReferenceAddress               = 0b00100101;
+static const int TemperaturAddress              = 0b00100110;
+static const int StatusAddress                  = 0b00100111;
+static const int OutXLAddress                   = 0b00101000;
+static const int OutXHAddress                   = 0b00101001;
+static const int OutYLAddress                   = 0b00101010;
+static const int OutYHAddress                   = 0b00101011;
+static const int OutZLAddress                   = 0b00101100;
+static const int OutZHAddress                   = 0b00101101;
+static const int FifoControlAddress             = 0b00101110;
+static const int FifoControlSourceAddress       = 0b00101111;
+static const int InteruptConfigureAddress       = 0b00110000;
+static const int InteruptConfigureSourceAddress = 0b00110001;
+static const int InteruptXHAddress              = 0b00110010;
+static const int InteruptXLAddress              = 0b00110011;
+static const int InteruptYHAddress              = 0b00110100;
+static const int InteruptYLAddress              = 0b00110101;
+static const int InteruptzHAddress              = 0b00110110;
+static const int InteruptzlAddress              = 0b00110111;
+static const int InteruptDurationAddress        = 0b00111000;
 }
 
 
 /// the L3GD20 register defaults
-namespace L3dg20RegistersDefaults {
-static const int mWhoDefaults                     = 0b11010100;
-static const int mControl_1Defaults               = 0b00001111;
-static const int mControl_2Defaults               = 0b00000000;
-static const int mControl_3Defaults               = 0b00000000;
-static const int mControl_4Defaults               = 0b00000000;
-static const int mControl_5Defaults               = 0b00000000;
-static const int mReferenceDefaults               = 0b00000000;
-static const int mFifoControlDefaults             = 0b00000000;
-static const int mInteruptConfigureDefaults       = 0b00000000;
-static const int mInteruptXHDefaults              = 0b00000000;
-static const int mInteruptXLDefaults              = 0b00000000;
-static const int mInteruptYHDefaults              = 0b00000000;
-static const int mInteruptYLDefaults              = 0b00000000;
-static const int mInteruptzHDefaults              = 0b00000000;
-static const int mInteruptzlDefaults              = 0b00000000;
-static const int mInteruptDurationDefaults        = 0b00000000;
+namespace L3dg20Defaults {
+static const int Who                     = 0b11010100;
+static const int ControlOne              = 0b00001111;
+static const int ControlTwo              = 0b00000000;
+static const int ControlThree            = 0b00000000;
+static const int ControlFour             = 0b00000000;
+static const int ControlFive             = 0b00000000;
+static const int Reference               = 0b00000000;
+static const int FifoControl             = 0b00000000;
+static const int InteruptConfigure       = 0b00000000;
+static const int InteruptXH              = 0b00000000;
+static const int InteruptXL              = 0b00000000;
+static const int InteruptYH              = 0b00000000;
+static const int InteruptYL              = 0b00000000;
+static const int InteruptzH              = 0b00000000;
+static const int Interuptzl              = 0b00000000;
+static const int InteruptDuration        = 0b00000000;
 }
-
 
 class L3GD20 : public Firmware_I2C {
 public:
@@ -205,6 +204,7 @@ public:
     int readZrotation(short *zrotation);
     //int readZrotation(int *zrotation);
 
+    int writeRegister(unsigned char address, unsigned char byte);
     //int setControlOne(unsigned char dr, unsigned char bw, bool pd, bool zen, bool xen, bool yen);
     int setControlOne();
     int setControlTwo(unsigned char hpm, unsigned char hpc);

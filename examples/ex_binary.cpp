@@ -38,7 +38,6 @@ int main(int argc, char **argv)
     binary.printShortAsBinary(0x0f0f);
     binary.printShortAsBinary(0xf0f0);
 
-
     std::cout << "Testing printByteAsBinary" << std::endl;
     binary.printByteAsBinary(0x01);
     binary.printByteAsBinary(0x23);
@@ -50,7 +49,6 @@ int main(int argc, char **argv)
     binary.printByteAsBinary(0xef);
     binary.printByteAsBinary(0xff);
     binary.printByteAsBinary(0x00);
-
     binary.printByteAsBinary(0x48);
 
     return 0;

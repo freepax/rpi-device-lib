@@ -150,7 +150,7 @@ int ADS1015::writeConfig()
 
     int status = write(mFd, mBuffer, 3);
     if (status != 3) {
-        std::cerr << __func__ << ": write failed with error " << status << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << std::dec << " write failed with error " << status << std::endl;
         return -1;
     }
 
@@ -164,7 +164,7 @@ int ADS1015::initRead()
 
     int status = write(mFd, mBuffer, 1);
     if (status != 1) {
-        std::cerr << __func__ << ": write failed with error" <<  status;
+        std::cerr << __func__ << ":" << __LINE__ << " write failed with error" <<  status;
         return -1;
     }
 
@@ -176,7 +176,7 @@ float ADS1015::readDevice()
 {
     int status = read(mFd, mBuffer, 2);
     if (status != 2) {
-        std::cerr << __func__ << ": read returned" << status;
+        std::cerr << __func__ << ":" << __LINE__ << " read returned" << status;
         return ConversionOutOfRange;
     }
 

@@ -26,7 +26,7 @@ int Gpio::openDevice()
     }
 
     if (mGpio != NULL) {
-        std::cerr << "Gpio::" << __func__ << "(): gpio memory already mapped" << std::endl;
+        std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " gpio memory already mapped" << std::endl;
         return -1;
     }
 
@@ -34,7 +34,7 @@ int Gpio::openDevice()
     if (mDebug) std::cout << "Opening device" << DevMem << std::endl;
     mFd = open(DevMem, O_RDWR|O_SYNC);
     if (mFd < 0) {
-        std::cerr << "Gpio::" << __func__ << "(): open " << DevMem << " failed" << std::endl;
+        std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " open " << DevMem << " failed" << std::endl;
         return -2;
     }
 
@@ -43,14 +43,14 @@ int Gpio::openDevice()
 
     mGpio = (unsigned*)mmap(NULL, BlockSize, PROT_READ|PROT_WRITE, MAP_SHARED, mFd, GpioBase);
     if (mGpio == MAP_FAILED) {
-        std::cerr << "Gpio::" << __func__ << "(): mmap failed" << std::endl;
+        std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " mmap failed" << std::endl;
         close(mFd);
         mFd = -1;
         return -2;
     }
 
     if (close(mFd) < 0) {
-        std::cerr << "Gpio::" << __func__ << "(): close failed" << std::endl;
+        std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " close failed" << std::endl;
         mFd = -1;
         return -1;
     }
@@ -65,17 +65,17 @@ int Gpio::openDevice()
 int Gpio::closeDevice()
 {
     /// munmap GPIO
-    if (mDebug) std::cout << "Gpio::" << __func__ << "(): Checking file descriptor" << std::endl;
+    if (mDebug) std::cout << "Gpio::" << __func__ << ":" << __LINE__ << " Checking file descriptor" << std::endl;
 
     if (mFd != -1) {
         close(mFd);
         mFd = -1;
     }
 
-    if (mDebug) std::cout << "Gpio::" << __func__ << "(): Munmap " << DevMem << std::endl;
+    if (mDebug) std::cout << "Gpio::" << __func__ << ":" << __LINE__ << " Munmap " << DevMem << std::endl;
 
     if (munmap(mGpio, BlockSize) < 0) {
-        std::cerr << "Gpio::" << __func__ << "(): munmap failed" << std::endl;
+        std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " munmap failed" << std::endl;
         return -1;
     }
 
@@ -94,7 +94,7 @@ void Gpio::setGpioDirection(int pin, int direction)
     switch (direction) {
     case GPIO::GpioInput:  *(mGpio + (pin / 10)) &= ~(7 << ((pin % 10) * 3)); break;
     case GPIO::GpioOutput: *(mGpio + (pin / 10)) |=  (1 << ((pin % 10) * 3)); break;
-    default: std::cerr << "Gpio::" << __func__ << "(): Unknown direction " << direction << std::endl;
+    default: std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " Unknown direction " << direction << std::endl;
     }
 }
 
@@ -106,6 +106,6 @@ void Gpio::setGpio(int pin, int value)
     switch (value) {
     case GPIO::GpioOff: *(mGpio + 10) = 1 << pin; break;
     case GPIO::GpioOn:  *(mGpio + 7) = 1 << pin; break;
-    default: std::cerr << "Gpio::" << __func__ << "(): iligal value " << value << std::endl;
+    default: std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " iligal value " << value << std::endl;
     }
 }

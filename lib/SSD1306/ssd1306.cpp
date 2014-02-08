@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <unistd.h>
+#include <string.h>
 
 #include <ssd1306.h>
 #include <binary.h>
@@ -13,15 +14,15 @@ SSD1306::SSD1306(char *device, unsigned char address) :
 int SSD1306::setAddress(unsigned char address)
 {
     if (address != SSD1306Addresses::SSD1306Address0 && address != SSD1306Addresses::SSD1306Address1) {
-        std::cerr << __func__ << "(): address given " << address << " is not a valid SSD1306 address" << std::endl;
-        std::cerr << __func__ << "(): valid addresses are 0b01111000 or 0b01111010 " << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " address given " << address << " is not a valid SSD1306 address" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " valid addresses are 0b01111000 or 0b01111010 " << std::endl;
         return -1;
     }
 
     if (mDebug) {
-        std::cout << "SSD1306::" << __func__ << "(): ";
+        std::cout << "SSD1306::" << __func__ << ":" << __LINE__ << " hex address x0" << std::hex << address << std::dec << std::endl;
         Binary binary;
-        binary.printByteAsBinary("Setting Address ", address);
+        binary.printByteAsBinary("bin address ", address);
     }
 
     mAddress = address;
@@ -32,85 +33,169 @@ int SSD1306::setAddress(unsigned char address)
 
 int SSD1306::runCommand(unsigned char command)
 {
-#if 1
-    mBuffer[0] = 0b00000000;
-    mBuffer[1] = command;
+    unsigned char buffer[] = { 0b00000000, command };
 
     if (mDebug) {
         Binary binary;
-        std::cerr << "SSD1306::" << __func__ << ":" << std::endl;
-        binary.printByteAsBinary("byte 0 ", mBuffer[0]);
-        binary.printByteAsBinary("byte 1 ", mBuffer[1]);
-        std::cerr << std::endl;
+        std::cerr << "SSD1306::" << __func__ << ":" << __LINE__  << "hex buffer 0 and 1 0x" << std::hex << buffer[0] << " 0x" << buffer[1] << std::dec << std::endl;
+        binary.printByteAsBinary("byte 0 ", buffer[0]);
+        binary.printByteAsBinary("byte 1 ", buffer[1]);
+        std::cerr << std::dec << std::endl;
     }
 
-    //std::cout << "desciptor " << mFd << std::endl;
-
-    int status = write(mFd, mBuffer, 2);
+    int status = write(mFd, buffer, 2);
     if (status != 2) {
-        std::cerr << "SSD1306::"  << __func__ << "(): write failed with status " << status << std::endl;
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed with status " << status << std::endl;
         return -1;
     }
 
-#else
-    mBuffer[0] = 0b00000000;
-
-    if (mDebug) {
-        Binary binary;
-        std::cerr << "SSD1306::" << __func__ << ":" << std::endl;
-        binary.printByteAsBinary("byte  ", mBuffer[0]);
-        std::cerr << std::endl;
-    }
-
-    //std::cout << "desciptor " << mFd << std::endl;
-
-    int status = write(mFd, mBuffer, 1);
-    if (status != 1) {
-        std::cerr << "SSD1306::"  << __func__ << "(): write failed with status " << status << std::endl;
-        return -1;
-    }
-
-    mBuffer[0] = command;
-
-    if (mDebug) {
-        Binary binary;
-        std::cerr << "SSD1306::" << __func__ << ":" << std::endl;
-        binary.printByteAsBinary("byte  ", mBuffer[0]);
-        std::cerr << std::endl;
-    }
-
-    status = write(mFd, mBuffer, 1);
-    if (status != 1) {
-        std::cerr << "SSD1306::"  << __func__ << "(): write failed with status " << status << std::endl;
-        return -2;
-    }
-#endif
     return 0;
 }
 
 
-int SSD1306::writeData(char *data, int size)
+int SSD1306::writeRegister(unsigned char reg, unsigned char data)
 {
-    if (size > 1024) {
-        std::cerr << "SSD1306::"  << __func__ << "(): size too big" << std::endl;
+    unsigned char buffer[] = { reg, data };
+
+    int status = write(mFd, buffer, 2);
+    if (status != 2) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed with status " << status << std::endl;
         return -1;
     }
 
-    mBuffer[0] = ((mCo << 7) & 0x80) | ((mDc << 6) & 0xc0);
+    return 0;
+}
 
-    if (mDebug) {
-        Binary binary;
-        std::cerr << "SSD1306::" << __func__ << ": ";
-        binary.printByteAsBinary("First byte ", mBuffer[0]);
+
+int SSD1306::writeByte(unsigned char byte)
+{
+    int status = write(mFd, &byte, 1);
+    if (status != 1) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed with status " << status << std::endl;
+        return -1;
+    }
+    return 0;
+}
+
+
+int SSD1306::writeLine(unsigned char page, unsigned char data[128])
+{
+    if (runCommand(ssd1306ColumnAddress) < 0)
+        return 0;
+    if (runCommand(0) < 0)
+        return 0;
+    if (runCommand(127) < 0)
+        return 0;
+
+    if (runCommand(ssd1306PageAddress) < 0)
+        return 0;
+    if (runCommand(page) < 0)
+        return 0;
+    if (runCommand(page) < 0)
+        return 0;
+
+    unsigned char b[129];
+    b[0] = 0x40;
+
+    for (int i = 1; i < 128; i++)
+        b[i] = data[i - 1];
+
+    int status = write(mFd, b, 128);
+    if (status < 0)
+        return -1;
+
+    return 0;
+}
+
+int SSD1306::writeChar(unsigned char line, unsigned char position, unsigned char character)
+{
+    position = position * 8;
+
+    if (runCommand(ssd1306ColumnAddress) < 0)
+        return 0;
+    if (runCommand(position) < 0)
+        return 0;
+    if (runCommand(position) < 0)
+        return 0;
+
+    if (runCommand(ssd1306PageAddress) < 0)
+        return 0;
+    if (runCommand(line) < 0)
+        return 0;
+    if (runCommand(line) < 0)
+        return 0;
+
+    return 0;
+}
+
+
+int SSD1306::writeData()
+{
+    if (runCommand(ssd1306ColumnAddress) < 0)
+        return 0;
+    if (runCommand(0) < 0)
+        return 0;
+    if (runCommand(127) < 0)
+        return 0;
+
+    if (runCommand(ssd1306PageAddress) < 0)
+        return 0;
+    if (runCommand(0xb0) < 0)
+        return 0;
+    if (runCommand(0xb7) < 0)
+        return 0;
+
+    unsigned char data[17];
+    memset(data, 0, 17);
+
+    std::cout << "writing data" << std::endl;
+    //for (int i = 0; i < 128; i += 16) {
+    for (int i = 0; i < 1024; i += 16) {
+
+        data[0] = 0x40;
+#if 1
+        for (int j = 1; j < 17; j++)
+            data[j] = arduino[i + j - 1];
+#else
+        for (int j = 1; j < 17; j++) {
+            int pos = i + 16 - j;
+            std::cout << "pos " << pos << std::endl;
+            data[j] = buffer[pos];
+        }
+#endif
+        int status = write(mFd, data, 17);
+        if (status < 0)
+            return -3;
     }
 
-    for (int i = 0; i < size; i++)
-        mBuffer[i + 1] = data[i];
+    return 0;
+}
 
-    int status = write(mFd, mBuffer, size + 1);
-    if (status != size + 1) {
-        std::cerr << "SSD1306::"  << __func__ << "(): write failed with status " << status << std::endl;
-        return -2;
+int SSD1306::clear()
+{
+    /// DISPLAY
+    if (runCommand(ssd1306ColumnAddress) < 0)
+        return 0;
+    if (runCommand(0) < 0)
+        return 0;
+    if (runCommand(127) < 0)
+        return 0;
+
+    if (runCommand(ssd1306PageAddress) < 0)
+        return 0;
+    if (runCommand(0) < 0)
+        return 0;
+    if (runCommand(7) < 0)
+        return 0;
+
+    unsigned char data[17] = { 0x40 };
+    memset(data, 0, 17);
+    data[0] = 0x40;
+
+    for (int i = 0; i < 1024; i += 16) {
+        int status = write(mFd, data, 17);
+        if (status < 0)
+            return -1;
     }
 
     return 0;

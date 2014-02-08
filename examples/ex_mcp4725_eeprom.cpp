@@ -29,14 +29,14 @@ int main(int argc, char **argv)
 
     /// set the powerdown bits
     if (mcp4725.setPowerDown(Mcp4725Power::PowerNormal) < 0) {
-        std::cerr << __func__ << "(): setControl failed" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " setControl failed" << std::endl;
         mcp4725.closeDevice();
         return 0;
     }
 
     /// set the control bits
     if (mcp4725.setControl(Mcp4725Config::ConfigDacEeprom) < 0) {
-        std::cerr << __func__ << "(): setControl failed" << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " setControl failed" << std::endl;
         mcp4725.closeDevice();
         return 0;
     }
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     /// open device
     int status = mcp4725.openDevice();
     if (status < 0) {
-        std::cerr << __func__  << "(): failed to open mcp4725"<< std::endl;
+        std::cerr << __func__  << ":" << __LINE__ << " failed to open mcp4725"<< std::endl;
         return 0;
     }
 
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     std::cout << "Testing writeDeviceEeprom" << std::endl;
     status = mcp4725.writeDevice(value);
     if (status < 0) {
-        std::cerr << __func__  << "(): failed to write mcp4725 (Eeprom)"<< std::endl;
+        std::cerr << __func__  << ":" << __LINE__ << " failed to write mcp4725 (Eeprom)"<< std::endl;
         return 0;
     }
     std::cout << "Testing writeDeviceEeprom SUCCESS" << std::endl;

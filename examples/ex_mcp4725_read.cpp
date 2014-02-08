@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 
     int status = mcp4725.openDevice();
     if (status < 0) {
-        std::cerr << __func__  << "(): failed to open mcp4725"<< std::endl;
+        std::cerr << __func__  << ":" << __LINE__ << " failed to open mcp4725"<< std::endl;
         return 0;
     }
 
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     unsigned short dac;
     status = mcp4725.readDevice(&config, &dac);
     if (status < 0) {
-        std::cerr << __func__  << "(): failed to read mcp4725"<< std::endl;
+        std::cerr << __func__  << ":" << __LINE__ << " failed to read mcp4725"<< std::endl;
         return 0;
     }
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     std::cout << "MCP3725 status" << std::endl;
     mcp4725.resolveConfig(config);
 
-    std::cout << "Dac value " << dac << std::endl;
+    std::cout << "Dac value 0x" << std::hex << dac << std::dec << std::endl;
 
     return 0;
 }

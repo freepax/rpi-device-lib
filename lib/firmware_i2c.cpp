@@ -16,7 +16,7 @@
 Firmware_I2C::Firmware_I2C(char *device, unsigned char address, bool debug) : mFd(-1), mDevice(device), mAddress(address), mDebug(debug)
 {
     if (mDebug) {
-        std::cout << __func__ << "(): device: "<< mDevice << " ";
+        std::cout << __func__ << ":" << __LINE__ << " device: "<< mDevice << " ";
         Binary binary;
         binary.printByteAsBinary("Address ", address);
     }
@@ -26,7 +26,7 @@ Firmware_I2C::Firmware_I2C(char *device, unsigned char address, bool debug) : mF
 Firmware_I2C::~Firmware_I2C()
 {
     if (mDebug)
-        std::cout << "Firmware_I2C::" << __func__ << "(): closing device" << std::endl;
+        std::cout << "Firmware_I2C::" << __func__ << ":" << __LINE__ << " closing device" << std::endl;
 
     closeDevice();
 }
@@ -40,25 +40,25 @@ int Firmware_I2C::openDevice()
 
     /// Open I2C device
     if (mDebug)
-        std::cout << "Firmware_I2C::" << __func__ << "(): opening device " << mDevice << std::endl;
+        std::cout << "Firmware_I2C::" << __func__ << ":" << __LINE__ << " opening device " << mDevice << std::endl;
 
     mFd = open(mDevice, O_RDWR);
     if (mFd < 0) {
-        std::cerr << __func__ << "(): openI2C failed with error " << mFd << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " openI2C failed with error " << mFd << std::endl;
         return -1;
     }
 
     if (mDebug) {
-        std::cerr <<  "Firmware_I2C::" << __func__ << "(): ";
+        std::cerr <<  "Firmware_I2C::" << __func__ << ":" << __LINE__ << " hex address " << std::hex << mAddress << std::dec << std::endl;
         Binary binary;
-        binary.printByteAsBinary("Address", mAddress);
+        binary.printByteAsBinary("bin address", mAddress);
         std::cerr << std::endl;
     }
 
     /// Set i2c device address in i2c driver for this session
     int status = ioctl(mFd, I2C_SLAVE, mAddress);
     if (status < 0) {
-        std::cerr << __func__ << "(): ioctl failed with error " << status << std::endl;
+        std::cerr << __func__ << ":" << __LINE__ << " ioctl failed with error " << status << std::endl;
         return -2;
     }
 
@@ -76,7 +76,7 @@ int Firmware_I2C::writeData(unsigned char *data, int size)
 
     int status = write(mFd, data, size);
     if (status < 0) {
-        std::cerr << "Firmware_I2C::" << __func__ << "(): write failed " << status << std::endl;
+        std::cerr << "Firmware_I2C::" << __func__ << ":" << __LINE__ << " write failed " << status << std::endl;
         return -1;
     }
 
@@ -88,7 +88,7 @@ int Firmware_I2C::readData(unsigned char *data, int size)
 {
     int status = read(mFd, data, size);
     if (status != size) {
-        std::cerr << "Firmware_I2C::" << __func__ << "(): read failed " << status << std::endl;
+        std::cerr << "Firmware_I2C::" << __func__ << ":" << __LINE__ << " read failed " << status << std::endl;
         return -2;
     }
 
@@ -111,11 +111,11 @@ int Firmware_I2C::closeDevice()
 int Firmware_I2C::setDevice(char *device)
 {
     /// check that device is valid
-    if (strcmp(device, FirmwareI2CDeviceses::i2c_0) != 0 && strcmp(device, FirmwareI2CDeviceses::i2c_1) != 0 &&
+    if (strcmp(device, FirmwareI2CDeviceses::i2c_0)     != 0 && strcmp(device, FirmwareI2CDeviceses::i2c_1) != 0 &&
             strcmp(device, FirmwareI2CDeviceses::i2c_2) != 0 && strcmp(device, FirmwareI2CDeviceses::i2c_3) != 0 &&
             strcmp(device, FirmwareI2CDeviceses::i2c_4) != 0 && strcmp(device, FirmwareI2CDeviceses::i2c_5) != 0 &&
             strcmp(device, FirmwareI2CDeviceses::i2c_6) != 0 && strcmp(device, FirmwareI2CDeviceses::i2c_7) != 0) {
-        std::cerr << "Firmware_I2C::" << __func__ << "(): device " << device << " not a valid device" << std::endl;
+        std::cerr << "Firmware_I2C::" << __func__ << ":" << __LINE__ << " device " << device << " not a valid device" << std::endl;
         return -1;
     }
 

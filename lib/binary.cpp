@@ -33,6 +33,7 @@ void Binary::printShortAsBinary(const char *text, unsigned short value)
     printShortAsBinary(value);
 }
 
+
 void Binary::printShortAsBinary(unsigned short value)
 {
     for (int i = 0; i < 16; i++) {
@@ -54,6 +55,7 @@ void Binary::printByteAsBinary(const char *text, unsigned char value)
     std::cout << text << " ";
     printByteAsBinary(value);
 }
+
 
 void Binary::printByteAsBinary(unsigned char value)
 {
