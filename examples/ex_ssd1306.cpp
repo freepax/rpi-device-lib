@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -180,7 +181,7 @@ int writeLineTest(SSD1306* ssd1306)
         if (ssd1306->writeLine(line, data) < 0)
             return -1;
 
-        usleep(1000000);
+        usleep(300000);
 
         ssd1306->clear();
     }
@@ -188,6 +189,34 @@ int writeLineTest(SSD1306* ssd1306)
     return 0;
 }
 
+#include <binary.h>
+int writeByteTest(SSD1306 *ssd1306)
+{
+    for (int repeate = 0; repeate < 3; repeate++) {
+        for (int line = 0; line < 8; line++) {
+            for (int position = 0; position < 16; position++) {
+
+                /// byte
+                unsigned char buffer[] = { 0xff };
+                std::cout <<  "line " << line << " position " << position << std::endl;
+
+                /// write byte
+                if (ssd1306->writeByte(line, position, buffer[0]) < 0) {
+                    std::cerr << __func__ << ":" << __LINE__ << " writeByte failed" << std::endl;
+                    return -1;
+                }
+                usleep(10000);
+            } /// position
+        } /// line
+
+        usleep(300000);
+        ssd1306->clear();
+        std::cout << "repeate " << std::dec << repeate << std::endl;
+
+    } /// repeate
+
+    ssd1306->clear();
+}
 
 int main(int argc, char **argv)
 {
@@ -211,40 +240,51 @@ int main(int argc, char **argv)
     }
 
 #if 0
-    if (writeLineTest(&ssd1306) < 0)
-        return 0;
-
-    if (writeImage(&ssd1306, buffer) < 0) {
-        std::cerr << __func__ << ":" << __LINE__ << " writeImage failed" << std::endl;
+    if (writeLineTest(&ssd1306) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " writeLineTest failed with status " << status << std::endl;
         return 0;
     }
 #endif
+
 
     ssd1306.clear();
 
-    unsigned char line[1023];
-    for (int i = 0; i < 1024; i++)
-        line[i] = font[i];
-
-    if (ssd1306.writeLine(1, line) < 0) {
-        std::cerr << __func__ << ":" << __LINE__ << " writeImage failed" << std::endl;
+    if (writeByteTest(&ssd1306) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " writeLineTest failed with status " << status << std::endl;
         return 0;
     }
 
 
-    if (writeImage(&ssd1306, arduino) < 0) {
-        std::cerr << __func__ << ":" << __LINE__ << " writeImage failed" << std::endl;
-        return 0;
-    }
+    int fnt = 0;
+    while ( true) {
+        unsigned char line[128];
 
+        for (int i = 0; i < 8; i++) {
 
-#if 0
-    if (ssd1306.writeData() < 0) {
-        std::cerr << __func__ << ":" << __LINE__ << " writeData failed" << std::endl;
-        ssd1306.closeDevice();
-        return 0;
-    }
-#endif
+            for (int j = 0; j < 128; j++) {
+                line[j] = font[fnt];
+                if (++fnt > 1023) fnt = 0;
+            }
+
+            if (ssd1306.writeLine(i, line) < 0) {
+                std::cerr << __func__ << ":" << __LINE__ << " writeImage failed" << std::endl;
+                return 0;
+            }
+        }
+
+        /// display characters a few seconds
+        usleep(2000000);
+        ssd1306.clear();
+
+        if (writeImage(&ssd1306, arduino) < 0) {
+            std::cerr << __func__ << ":" << __LINE__ << " writeImage failed" << std::endl;
+            return 0;
+        }
+
+        /// display image a few seconds
+        usleep(2000000);
+        ssd1306.clear();
+    } /// end of while
 
     ssd1306.closeDevice();
 

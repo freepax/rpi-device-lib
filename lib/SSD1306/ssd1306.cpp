@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 
 #include <unistd.h>
 #include <string.h>
@@ -53,149 +54,144 @@ int SSD1306::runCommand(unsigned char command)
 }
 
 
-int SSD1306::writeRegister(unsigned char reg, unsigned char data)
+int SSD1306::writeLine(unsigned char page, unsigned char data[Ssd1306LcdWitdh])
 {
-    unsigned char buffer[] = { reg, data };
-
-    int status = write(mFd, buffer, 2);
-    if (status != 2) {
-        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed with status " << status << std::endl;
+    /// set column
+    if (runCommand(ssd1306ColumnAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -1;
+    }
+
+    if (runCommand(0) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -2;
+    }
+
+    if (runCommand(Ssd1306LcdWitdh - 1) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -3;
+    }
+
+    /// set page - set from/to the same
+    if (runCommand(ssd1306PageAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -4;
+    }
+
+    if (runCommand(page) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -5;
+    }
+
+    if (runCommand(page) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -6;
+    }
+
+    unsigned char buffer[Ssd1306LcdWitdh + 1] = { 0x40 };
+
+    for (int i = 1; i < Ssd1306LcdWitdh; i++)
+        buffer[i] = data[i - 1];
+
+    if (write(mFd, buffer, Ssd1306LcdWitdh + 1) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
+        return -7;
     }
 
     return 0;
 }
 
 
-int SSD1306::writeByte(unsigned char byte)
-{
-    int status = write(mFd, &byte, 1);
-    if (status != 1) {
-        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed with status " << status << std::endl;
-        return -1;
-    }
-    return 0;
-}
-
-
-int SSD1306::writeLine(unsigned char page, unsigned char data[128])
-{
-    if (runCommand(ssd1306ColumnAddress) < 0)
-        return 0;
-    if (runCommand(0) < 0)
-        return 0;
-    if (runCommand(127) < 0)
-        return 0;
-
-    if (runCommand(ssd1306PageAddress) < 0)
-        return 0;
-    if (runCommand(page) < 0)
-        return 0;
-    if (runCommand(page) < 0)
-        return 0;
-
-    unsigned char b[129];
-    b[0] = 0x40;
-
-    for (int i = 1; i < 128; i++)
-        b[i] = data[i - 1];
-
-    int status = write(mFd, b, 128);
-    if (status < 0)
-        return -1;
-
-    return 0;
-}
-
-int SSD1306::writeChar(unsigned char line, unsigned char position, unsigned char character)
+int SSD1306::writeByte(unsigned char line, unsigned char position, unsigned char data)
 {
     position = position * 8;
 
-    if (runCommand(ssd1306ColumnAddress) < 0)
-        return 0;
-    if (runCommand(position) < 0)
-        return 0;
-    if (runCommand(position) < 0)
-        return 0;
+    /// set column - set from/to the same
+    if (runCommand(ssd1306ColumnAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -1;
+    }
 
-    if (runCommand(ssd1306PageAddress) < 0)
-        return 0;
-    if (runCommand(line) < 0)
-        return 0;
-    if (runCommand(line) < 0)
-        return 0;
+    if (runCommand(position) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -2;
+    }
 
-    return 0;
-}
+    if (runCommand(position+8) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -3;
+    }
 
+    /// set page - set from/to the same
+    if (runCommand(ssd1306PageAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -4;
+    }
 
-int SSD1306::writeData()
-{
-    if (runCommand(ssd1306ColumnAddress) < 0)
-        return 0;
-    if (runCommand(0) < 0)
-        return 0;
-    if (runCommand(127) < 0)
-        return 0;
+    if (runCommand(line) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -5;
+    }
 
-    if (runCommand(ssd1306PageAddress) < 0)
-        return 0;
-    if (runCommand(0xb0) < 0)
-        return 0;
-    if (runCommand(0xb7) < 0)
-        return 0;
+    if (runCommand(line) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -6;
+    }
 
-    unsigned char data[17];
-    memset(data, 0, 17);
+    unsigned char buffer[] = { 0x40, data, data, data, data, data, data, data, data };
 
-    std::cout << "writing data" << std::endl;
-    //for (int i = 0; i < 128; i += 16) {
-    for (int i = 0; i < 1024; i += 16) {
-
-        data[0] = 0x40;
-#if 1
-        for (int j = 1; j < 17; j++)
-            data[j] = arduino[i + j - 1];
-#else
-        for (int j = 1; j < 17; j++) {
-            int pos = i + 16 - j;
-            std::cout << "pos " << pos << std::endl;
-            data[j] = buffer[pos];
-        }
-#endif
-        int status = write(mFd, data, 17);
-        if (status < 0)
-            return -3;
+    if (write(mFd, buffer, 9) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
+        return -7;
     }
 
     return 0;
 }
 
+
 int SSD1306::clear()
 {
-    /// DISPLAY
-    if (runCommand(ssd1306ColumnAddress) < 0)
-        return 0;
-    if (runCommand(0) < 0)
-        return 0;
-    if (runCommand(127) < 0)
-        return 0;
+    /// set column
+    if (runCommand(ssd1306ColumnAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -1;
+    }
 
-    if (runCommand(ssd1306PageAddress) < 0)
-        return 0;
-    if (runCommand(0) < 0)
-        return 0;
-    if (runCommand(7) < 0)
-        return 0;
+    if (runCommand(0) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -2;
+    }
+
+    if (runCommand(Ssd1306LcdWitdh - 1) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -3;
+    }
+
+    /// set page
+    if (runCommand(ssd1306PageAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -4;
+    }
+
+    if (runCommand(0) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -5;
+    }
+
+    if (runCommand(SSD1306LcdPages - 1) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -6;
+    }
 
     unsigned char data[17] = { 0x40 };
     memset(data, 0, 17);
     data[0] = 0x40;
 
     for (int i = 0; i < 1024; i += 16) {
-        int status = write(mFd, data, 17);
-        if (status < 0)
-            return -1;
+        if (write(mFd, data, 17) < 0) {
+            std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
+            return -7;
+        }
     }
 
     return 0;

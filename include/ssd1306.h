@@ -5,8 +5,7 @@
 #include <firmware_i2c.h>
 
 
-#define Ssd1306_128_64
-
+/// adafruit splash screen - shamelessly stolen from their code
 static unsigned char arduino[1024] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -91,22 +90,10 @@ static const bool SSD1306CommandData    = true;
 }
 
 
-
-#if defined Ssd1306_128_64 && defined Ssd1306_128_32
-#error "Only one display can be specified at once"
-#endif
-#if !defined Ssd1306_128_64 && !defined Ssd1306_128_32
-#error "At least one display must be specified"
-#endif
-
-#if defined Ssd1306_128_64
 static const unsigned int Ssd1306LcdWitdh   = 128;
-static const unsigned int Ssd1306LcdHeight  = 64;
-#endif
-#if defined Ssd1306_128_32
-static const unsigned int Ssd1306LcdWidth   = 128;
-static const unsigned int Ssd1306LcdHeight  = 32;
-#endif
+static const unsigned int SSD1306LcdPages   = 8;
+static const unsigned int Ssd1306LcdHeight64  = 64;
+//static const unsigned int Ssd1306LcdHeight32  = 32;
 
 static const unsigned int Ssd1306SetContrast                        = 0x81;
 static const unsigned int Ssd1306_DisplayAllOnResume                = 0xA4;
@@ -153,12 +140,6 @@ static const unsigned int Ssd1306LeftHorizontalScroll               = 0x27;
 static const unsigned int Ssd1306VerticalAndRrightHhorizontalScroll = 0x29;
 static const unsigned int Ssd1306VerticalAndLeftHorizontalScroll    = 0x2A;
 
-static const bool Black = false;
-static const bool White = true;
-
-static const bool Lo    = false;
-static const bool High  = true;
-
 
 class SSD1306 : public Firmware_I2C {
 public:
@@ -169,20 +150,10 @@ public:
     ~SSD1306() { closeDevice(); }
 
     int setAddress(unsigned char address);
-
     int runCommand(unsigned char command);
-
-    int writeRegister(unsigned char reg, unsigned char data);
-
-    int writeData();
     int writeLine(unsigned char line, unsigned char data[]);
-    int writeChar(unsigned char line, unsigned char position, unsigned char character);
-
+    int writeByte(unsigned char line, unsigned char position, unsigned char data);
     int clear();
-
-
-    int writeByte(unsigned char byte);
-
 
 private:
     bool mCo;                               /// Continuation bit 0: data bytes only
@@ -190,17 +161,3 @@ private:
 };
 
 #endif /// SSD1306_H
-
-
-
-#if 0
-    volatile uint8_t *mMosiport;
-    volatile uint8 *mClkport:
-    volatile uint8 *mCsport;
-    volatile uint8 *mDcport;
-
-    uint8_t mosipinmask;
-    uint8_t clkpinmask;
-    uint8_t cspinmask;
-    uint8_t dcpinmask;
-#endif
