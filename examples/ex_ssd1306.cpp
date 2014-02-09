@@ -56,7 +56,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -6;
 
     /// set display offset
-    if (ssd1306->runCommand(Ssd1306SetDisplayOffset) < 0)                    /// 0x3d
+    if (ssd1306->runCommand(Ssd1306SetDisplayOffset) < 0)
         return -7;
 
     /// the display offset
@@ -173,10 +173,10 @@ int writeLineTest(SSD1306* ssd1306)
     for (unsigned char line = 0; line < 8; line++) {
 
         unsigned char data[128];
-        memset(data, 1, 128);
+        memset(data, 0, 128);
 
-        for (int i = 0; i < 128; i++)
-            data[i] = 0b11111111;
+        for (int i = 0; i < 125; i++)
+            data[i] = font[i + (65 * 5)];
 
         if (ssd1306->writeLine(line, data) < 0)
             return -1;
@@ -189,32 +189,25 @@ int writeLineTest(SSD1306* ssd1306)
     return 0;
 }
 
-#include <binary.h>
+
 int writeByteTest(SSD1306 *ssd1306)
 {
-    for (int repeate = 0; repeate < 3; repeate++) {
-        for (int line = 0; line < 8; line++) {
-            for (int position = 0; position < 16; position++) {
+    for (int line = 0; line < 8; line++) {
+        for (int position = 0; position < 128; position++) {
 
-                /// byte
-                unsigned char buffer[] = { 0xff };
-                std::cout <<  "line " << line << " position " << position << std::endl;
+            //std::cout << "line " << line << " position " << position << std::endl;
 
-                /// write byte
-                if (ssd1306->writeByte(line, position, buffer[0]) < 0) {
-                    std::cerr << __func__ << ":" << __LINE__ << " writeByte failed" << std::endl;
-                    return -1;
-                }
-                usleep(10000);
-            } /// position
-        } /// line
+            /// write byte
+            if (ssd1306->writeByte(line, position, 0x55) < 0) {
+                std::cerr << __func__ << ":" << __LINE__ << " writeByte failed" << std::endl;
+                return -1;
+            }
 
-        usleep(300000);
-        ssd1306->clear();
-        std::cout << "repeate " << std::dec << repeate << std::endl;
+            usleep(1000);
+        } /// position
+    } /// line
 
-    } /// repeate
-
+    usleep(300000);
     ssd1306->clear();
 }
 
@@ -239,24 +232,21 @@ int main(int argc, char **argv)
         return 0;
     }
 
-#if 0
-    if (writeLineTest(&ssd1306) < 0) {
-        std::cerr << __func__ << ":" << __LINE__ << " writeLineTest failed with status " << status << std::endl;
-        return 0;
-    }
-#endif
-
-
-    ssd1306.clear();
-
-    if (writeByteTest(&ssd1306) < 0) {
-        std::cerr << __func__ << ":" << __LINE__ << " writeLineTest failed with status " << status << std::endl;
-        return 0;
-    }
-
-
     int fnt = 0;
     while ( true) {
+
+        if (writeLineTest(&ssd1306) < 0) {
+            std::cerr << __func__ << ":" << __LINE__ << " writeLineTest failed with status " << status << std::endl;
+            return 0;
+        }
+
+        ssd1306.clear();
+
+        if (writeByteTest(&ssd1306) < 0) {
+            std::cerr << __func__ << ":" << __LINE__ << " writeLineTest failed with status " << status << std::endl;
+            return 0;
+        }
+
         unsigned char line[128];
 
         for (int i = 0; i < 8; i++) {
