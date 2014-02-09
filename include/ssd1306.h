@@ -125,7 +125,7 @@ static const unsigned int ssd1306PageAddress                        = 0x22;
 static const unsigned int ssd1306ComScanInc                         = 0xC0;
 static const unsigned int ssd1306ComScanDec                         = 0xC8;
 
-static const unsigned int ssd1306SegReMap                           = 0xA0;
+static const unsigned int ssd1306SegReMap                           = 0xA1;
 
 static const unsigned int ssd1306ChcargePump                        = 0x8D;
 

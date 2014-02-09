@@ -104,8 +104,6 @@ int SSD1306::writeLine(unsigned char page, unsigned char data[Ssd1306LcdWitdh])
 
 int SSD1306::writeByte(unsigned char line, unsigned char position, unsigned char data)
 {
-    position = position * 8;
-
     /// set column - set from/to the same
     if (runCommand(ssd1306ColumnAddress) < 0) {
         std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
@@ -117,7 +115,7 @@ int SSD1306::writeByte(unsigned char line, unsigned char position, unsigned char
         return -2;
     }
 
-    if (runCommand(position+8) < 0) {
+    if (runCommand(position) < 0) {
         std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -3;
     }
@@ -138,9 +136,9 @@ int SSD1306::writeByte(unsigned char line, unsigned char position, unsigned char
         return -6;
     }
 
-    unsigned char buffer[] = { 0x40, data, data, data, data, data, data, data, data };
+    unsigned char buffer[] = { 0x40, data };
 
-    if (write(mFd, buffer, 9) < 0) {
+    if (write(mFd, buffer, 2) < 0) {
         std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
         return -7;
     }
