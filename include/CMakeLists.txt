@@ -8,7 +8,7 @@ set(HEADERS
     sinewave.h
     firmware_i2c.h
     pca9685.h
-    arial_bold.h
+    font.h
 )
 
 install(FILES ${HEADERS} DESTINATION include)

@@ -1,7 +1,7 @@
 include_directories(../../include/)
 
 set(SSD1306_SOURCE ssd1306.cpp)
-set(SSD1306_HEADERS ../../${INCLUDE}/ssd1306.h ../../${INCLUDE}/firmware_i2c.h ../../${INCLUDE}/binary.h ../../${INCLUDE}/arial_bold.h)
+set(SSD1306_HEADERS ../../${INCLUDE}/ssd1306.h ../../${INCLUDE}/firmware_i2c.h ../../${INCLUDE}/binary.h ../../${INCLUDE}/font.h)
 
 add_library(ssd1306 SHARED ${SSD1306_SOURCE} ${SSD1306_HEADERS})
 add_library(ssd1306_static STATIC ${SSD1306_SOURCE} ${SSD1306_HEADERS})
