@@ -14,7 +14,7 @@ double altitude(long pa, long p0);
 
 /// OSS modes
 enum OssMode {
-    ModeOss0,
+    ModeOss0 = 0,
     ModeOss1,
     ModeOss2,
     ModeOss3

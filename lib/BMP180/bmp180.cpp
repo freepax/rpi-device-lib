@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 #include <math.h>
+#include <string.h>
 
 #include <bmp180.h>
 #include <binary.h>
@@ -20,9 +21,10 @@ int Bmp180::openDevice()
         return -1;
     }
 
+    /// calibration start address
     unsigned char buffer[22] = { BMP180::EEPromStartAddress };
 
-    /// write start address
+    /// write start address to device
     if (writeData(buffer, 1) < 0) {
         std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " writeData failed" << std::endl;
         return -2;
@@ -58,7 +60,7 @@ int Bmp180::openDevice()
     mCalibration.mc  = buffer[18] << 8 | buffer[19];
     mCalibration.md  = buffer[20] << 8 | buffer[21];
 
-    if (mDebug) {
+    if (mDebug || 1) {
         std::cout << "ac1  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.ac1 << std::dec << std::endl;
         std::cout << "ac2  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.ac2 << std::dec << std::endl;
         std::cout << "ac3  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.ac3 << std::dec << std::endl;
@@ -104,8 +106,8 @@ int Bmp180::readTemperatur(float *temperatur)
         return -1;
     }
 
-    *temperatur = (float)(mCalc.b5 + 8) / 16.0 / 10.0;
-
+    //*temperatur = (float)(mCalc.b5 + 8) / 16.0 / 10.0;
+    *temperatur = ((mCalc.b5 + 8) >> 4) / 10.0;  /* temperature in deg C*/
     return 0;
 }
 
@@ -137,9 +139,13 @@ int Bmp180::readTemperatur()
 
     /// calculate temperatur
     mCalc.UT = buffer[0] << 8 | buffer[1];
-    mCalc.x1 = (mCalc.UT - mCalibration.ac6) * mCalibration.ac5 / 32768;
-    mCalc.x2 = mCalibration.mc * 2048 / (mCalc.x1 + mCalibration.md);
+
+    mCalc.x1 = (((long)mCalc.UT - (long) mCalibration.ac6) * (long) mCalibration.ac5) >> 15;
+    //mCalc.x1 = (mCalc.UT - mCalibration.ac6) * mCalibration.ac5 / 32768;
+    mCalc.x2 = ((long) mCalibration.mc << 11) / (mCalc.x1 + mCalibration.md);
+    //mCalc.x2 = mCalibration.mc * 2048 / (mCalc.x1 + mCalibration.md);
     mCalc.b5 = mCalc.x1 + mCalc.x2;
+    //mCalc.b5 = mCalc.x1 + mCalc.x2;
 
     if (mDebug) {
         std::cout << "UT     " << std::dec << mCalc.UT << std::endl;
@@ -183,7 +189,7 @@ int Bmp180::readPressure(int oss, bool update_temperatur)
     }
 
     /// need three bytes when reading back data - buffer[0] preinitialized with control register address
-    unsigned char buffer[3] = { BMP180::ControlRegisterAddress };
+    unsigned char buffer[3] = { BMP180::ControlRegisterAddress, 0, 0 };
 
     /// Hardware Accuracy Modes including bit pattern for pressure read request
     switch (oss) {
@@ -209,7 +215,8 @@ int Bmp180::readPressure(int oss, bool update_temperatur)
     default: usleep(4500);
     }
 
-    /// write address (1 byte) to measured value's msb byte
+    /// write address to measured value's msb byte
+    memset(buffer, 0, 3);
     buffer[0] = BMP180::ConvertedValueMsb;
     if (writeData(buffer, 1) < 0) {
         std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " writeData failed" << std::endl;
@@ -230,7 +237,7 @@ int Bmp180::readPressure(int oss, bool update_temperatur)
     }
 
     /// do the pressure calculation
-    mCalc.UP = (unsigned long)(buffer[0] << 16) | (unsigned long)(buffer[1] << 8) | (unsigned long)(buffer[2] >> (8 - oss));
+    mCalc.UP = (((unsigned long) buffer[0] << 16) | ((unsigned long) buffer[1] << 8) | (unsigned long) buffer[2]) >> (8 - oss);
     if (mDebug) std::cout << "UT " << std::dec << mCalc.UT << std::endl;
 
     mCalc.b6 = mCalc.b5 - 4000;
@@ -239,67 +246,51 @@ int Bmp180::readPressure(int oss, bool update_temperatur)
     mCalc.x1 = (mCalc.b6 * mCalc.b6) >> 12;
     mCalc.x1 *= mCalibration.b2;
     mCalc.x1 >>= 11;
-    //mCalc.x1 = (mCalibration.mB2 * (mCalc.b6 * mCalc.b6 / 4096)) / 2048;
     if (mDebug) std::cout << "x1 " << std::dec << mCalc.x1 << std::endl;
 
     mCalc.x2 = (mCalibration.ac2 * mCalc.b6);
     mCalc.x2 >>= 11;
-    //mCalc.x2 = mCalibration.ac2 * mCalc.b6 / 2048;
     if (mDebug) std::cout << "x2 " << std::dec << mCalc.x2 << std::endl;
 
     mCalc.x3 = mCalc.x1 + mCalc.x2;
     if (mDebug) std::cout << "x3 " << std::dec << mCalc.x3 << std::endl;
 
-    //mCalc.b3 = ((((long)mAc1 * 4 + mCalc.x3) << oss) + 2) / 4;
     mCalc.b3 = (((((long)mCalibration.ac1) * 4 + mCalc.x3) << oss) + 2) >> 2;
     if (mDebug) std::cout << "b3 " << std::dec << mCalc.b3 << std::endl;
 
     mCalc.x1 = (mCalibration.ac3 * mCalc.b6) >> 13;
-    //mCalc.x1 = mAc3 * mCalc.b6 / 8192;
     if (mDebug) std::cout << "x1 " << std::dec << mCalc.x1 << std::endl;
 
     mCalc.x2 = (mCalibration.b1 * ((mCalc.b6 * mCalc.b6) >> 12)) >> 16;
-    //mCalc.x2 = (mB1 * (mCalc.b6 * mCalc.b6 / 4096)) / 65536;
     if (mDebug) std::cout << "x2 " << std::dec << mCalc.x2 << std::endl;
 
     mCalc.x3 = ((mCalc.x1 + mCalc.x2) + 2) >> 2;
-    //mCalc.x3 = ((mCalc.x1 + mCalc.x2) + 2) / 4;
     if (mDebug) std::cout << "x3 " << std::dec << mCalc.x3 << std::endl;
 
     mCalc.b4 = (mCalibration.ac4 * (unsigned long) (mCalc.x3 + 32768)) >> 15;
-    //mCalc.b4 = mCalibration.ac4 * (unsigned long)(mCalc.x3 + 32768) / 32768;
     if (mDebug) std::cout << "b4 " << std::dec << mCalc.b4 << std::endl;
 
     mCalc.b7 = ((unsigned long)(mCalc.UP - mCalc.b3) * (50000 >> oss));
-    //mCalc.b7 = ((unsigned long)mCalc.UP - mCalc.b3) * (50000 >> oss);
     if (mDebug) std::cout << "b7 " << std::dec << mCalc.b7 << std::endl;
 
     if (mCalc.b7 < 0x80000000)
         mCalc.p = (mCalc.b7 << 1) / mCalc.b4;
-        //mCalc.p = (mCalc.b7 * 2) / mCalc.b4;
     else
         mCalc.p = (mCalc.b7 / mCalc.b4) << 1;
-        //mCalc.p = (mCalc.b7 / mCalc.b4) * 2;
     if (mDebug) std::cout << "p " << std::dec << mCalc.p << std::endl;
 
     mCalc.x1 = mCalc.p >> 8;
     mCalc.x1 *= mCalc.x1;
     mCalc.x1 = (mCalc.x1 * 3038) >> 16;
-    //mCalc.x1 = (mCalc.p / 256) * (mCalc.p / 256);
-    //mCalc.x1 = (mCalc.x1 * 3038) / 65536;
     if (mDebug) std::cout << "x1 " << std::dec << mCalc.x1 << std::endl;
 
-
     mCalc.x2 = (mCalc.p * -7357) >> 16;
-    //mCalc.x2 = (-7357 * mCalc.p) / 65536;
     if (mDebug) std::cout << "x2 " << std::dec << mCalc.x2 << std::endl;
 
     /// pressure in Pa
     mCalc.p += (mCalc.x1 + mCalc.x2 + 3791) >> 4;
-    //mCalc.p += (mCalc.x1 + mCalc.x2 + 3791) / 16;
     if (mDebug) std::cout << "p " << std::dec << mCalc.p << std::endl;
 
-    /// return the pressure
     return 0;
 }
 
