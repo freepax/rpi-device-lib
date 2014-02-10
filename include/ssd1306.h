@@ -151,9 +151,11 @@ public:
 
     int setAddress(unsigned char address);
     int runCommand(unsigned char command);
-    int writeLine(unsigned char line, unsigned char data[]);
+    int writeImage(unsigned char data[Ssd1306LcdWitdh * SSD1306LcdPages]);
+    int writeLine(unsigned char line, unsigned char data[25]);
     int writeByte(unsigned char line, unsigned char position, unsigned char data);
-    int clear();
+    int clearDisplay();
+    int clearLine(int line);
 
 private:
     bool mCo;                               /// Continuation bit 0: data bytes only

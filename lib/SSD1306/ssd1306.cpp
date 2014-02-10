@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <font.h>
 #include <ssd1306.h>
 #include <binary.h>
 
@@ -54,7 +55,62 @@ int SSD1306::runCommand(unsigned char command)
 }
 
 
-int SSD1306::writeLine(unsigned char page, unsigned char data[Ssd1306LcdWitdh])
+int SSD1306::writeImage(unsigned char data[Ssd1306LcdWitdh * SSD1306LcdPages])
+{
+    /// set column from first to last
+    if (runCommand(ssd1306ColumnAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -1;
+    }
+
+    if (runCommand(0) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -2;
+    }
+
+    if (runCommand(Ssd1306LcdWitdh-1) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -3;
+    }
+
+    /// set page - from first to last
+    if (runCommand(ssd1306PageAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -4;
+    }
+
+    if (runCommand(0) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -5;
+    }
+
+    if (runCommand(SSD1306LcdPages - 1) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -6;
+    }
+
+    /// define and prepare buffer
+    unsigned char buffer[Ssd1306LcdWitdh * SSD1306LcdPages + 1];
+    memset(buffer, 0, Ssd1306LcdWitdh * SSD1306LcdPages + 1);
+
+    /// first byte is write command
+    buffer[0] = 0x40;
+
+    /// copy in image bytes - 1024 of them
+    for (int i = 1; i < Ssd1306LcdWitdh * SSD1306LcdPages; i++)
+        buffer[i] = data[i-1];
+
+    /// write the image date to the ssd1306 device
+    if (write(mFd, buffer, Ssd1306LcdWitdh * SSD1306LcdPages + 1) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
+        return -7;
+    }
+
+    return 0;
+}
+
+
+int SSD1306::writeLine(unsigned char page, unsigned char data[25])
 {
     /// set column
     if (runCommand(ssd1306ColumnAddress) < 0) {
@@ -67,7 +123,7 @@ int SSD1306::writeLine(unsigned char page, unsigned char data[Ssd1306LcdWitdh])
         return -2;
     }
 
-    if (runCommand(Ssd1306LcdWitdh - 1) < 0) {
+    if (runCommand(Ssd1306LcdWitdh-1) < 0) {
         std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -3;
     }
@@ -88,10 +144,23 @@ int SSD1306::writeLine(unsigned char page, unsigned char data[Ssd1306LcdWitdh])
         return -6;
     }
 
-    unsigned char buffer[Ssd1306LcdWitdh + 1] = { 0x40 };
+    unsigned char buffer[Ssd1306LcdWitdh + 1];
+    memset(buffer, 0, Ssd1306LcdWitdh + 1);
 
-    for (int i = 1; i < Ssd1306LcdWitdh; i++)
-        buffer[i] = data[i - 1];
+    /// first byte is write command
+    buffer[0] = 0x40;
+
+    int offset = 0;
+    int f = 0;
+
+    /// data follows - look up bytes in the font array
+    for (int i = 1; i < 127; i++) {
+        if (f == 5) {
+            offset++;
+            f = 0;
+        }
+        buffer[i] = font[data[offset] * 5 + f++];
+    }
 
     if (write(mFd, buffer, Ssd1306LcdWitdh + 1) < 0) {
         std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
@@ -146,8 +215,55 @@ int SSD1306::writeByte(unsigned char line, unsigned char position, unsigned char
     return 0;
 }
 
+int SSD1306::clearLine(int line)
+{
+    /// set column
+    if (runCommand(ssd1306ColumnAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -1;
+    }
 
-int SSD1306::clear()
+    if (runCommand(0) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -2;
+    }
+
+    if (runCommand(Ssd1306LcdWitdh - 1) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -3;
+    }
+
+    /// set page - set from/to equal
+    if (runCommand(ssd1306PageAddress) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -4;
+    }
+
+    if (runCommand(line) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -5;
+    }
+
+    if (runCommand(line) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
+        return -6;
+    }
+
+    unsigned char data[65];
+    memset(data, 0, 65);
+    data[0] = 0x40;
+
+    /// write 65 bytes
+    if (write(mFd, data, 65) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
+        return -7;
+    }
+
+    return 0;
+}
+
+
+int SSD1306::clearDisplay()
 {
     /// set column
     if (runCommand(ssd1306ColumnAddress) < 0) {
@@ -181,15 +297,14 @@ int SSD1306::clear()
         return -6;
     }
 
-    unsigned char data[17] = { 0x40 };
-    memset(data, 0, 17);
+    unsigned char data[1025];
+    memset(data, 0, 1025);
     data[0] = 0x40;
 
-    for (int i = 0; i < 1024; i += 16) {
-        if (write(mFd, data, 17) < 0) {
-            std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
-            return -7;
-        }
+    /// write 1025 bytes
+    if (write(mFd, data, 1025) < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
+        return -7;
     }
 
     return 0;
