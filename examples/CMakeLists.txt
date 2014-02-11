@@ -30,6 +30,20 @@ add_executable(ex_gpio_static ${GPIO_SOURCES} ${GPIO_HEADERS})
 target_link_libraries(ex_gpio gpio)
 target_link_libraries(ex_gpio_static gpio_static)
 
+# GPIO input
+set(GPIO_INPUT_SOURCES
+    ex_gpio_input.cpp
+)
+
+set(GPIO__INPUT_HEADERS
+    ../${INCLUDE}/gpio.h
+)
+
+add_executable(ex_gpio_input ${GPIO_INPUT_SOURCES} ${GPIO_INPUT_HEADERS})
+add_executable(ex_gpio_input_static ${GPIO_INPUT_SOURCES} ${GPIO_INPUT_HEADERS})
+target_link_libraries(ex_gpio_input gpio)
+target_link_libraries(ex_gpio_input_static gpio_static)
+
 #LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/lib/MCP4725)
 
 
@@ -207,10 +221,12 @@ set(BMP180_HEADERS
 set(BMP180_LIB
     bmp180
     binary
+    gpio
 )
 
 set(BMP180_STATIC_LIB
     bmp180_static
+    gpio_static
     binary_static
 )
 
@@ -219,12 +235,41 @@ add_executable(ex_bmp180_static ${BMP180_SOURCES} ${BMP180_HEADERS})
 target_link_libraries(ex_bmp180 ${BMP180_LIB})
 target_link_libraries(ex_bmp180_static ${BMP180_STATIC_LIB})
 
+# Altimeter
+set(ALTIMETER_SOURCES
+    ex_altimeter.cpp
+)
+
+set(ALTIMETER_HEADERS
+    ../${INCLUDE}/bmp180.h
+)
+
+set(ALTIMETER_LIB
+    bmp180
+    gpio
+    ssd1306
+    binary
+)
+
+set(ALTIMETER_STATIC_LIB
+    bmp180_static
+    ssd1306_static
+    gpio_static
+    binary_static
+)
+
+add_executable(ex_altimeter ${ALTIMETER_SOURCES} ${ALTIMETER_HEADERS})
+add_executable(ex_altimeter_static ${ALTIMETER_SOURCES} ${ALTIMETER_HEADERS})
+target_link_libraries(ex_altimeter ${ALTIMETER_LIB})
+target_link_libraries(ex_altimeter_static ${ALTIMETER_STATIC_LIB})
 # install
 set(EXECUTABLES
 ex_binary
 ex_binary_static
 ex_gpio
 ex_gpio_static
+ex_gpio_input
+ex_gpio_input_static
 ex_ads1015
 ex_ads1015_static
 ex_pca9685
@@ -243,6 +288,8 @@ ex_l3gd20
 ex_l3gd20_static
 ex_bmp180
 ex_bmp180_static
+ex_altimeter
+ex_altimeter_static
 )
 
 install(TARGETS ${EXECUTABLES} DESTINATION examples)
