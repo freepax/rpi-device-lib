@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     }
 #endif
 
-    int output = GPIO::Gpio8;
+    int output = GPIO::Gpio4;
 
     gpio.setGpioDirection(output, GPIO::GpioOutput);
 
