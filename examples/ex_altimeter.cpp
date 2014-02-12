@@ -46,11 +46,11 @@ int initDisplay(SSD1306 *ssd1306)
     gpio.closeDevice();
 
     /// display off
-    if (ssd1306->runCommand(Ssd1306DisplayOff) < 0)                      /// 0xae
+    if (ssd1306->runCommand(Ssd1306DisplayOff) < 0)
         return -2;
 
     /// set display clock div
-    if (ssd1306->runCommand(Ssd1306SetDisplayClockDiv) < 0)               /// 0xd5
+    if (ssd1306->runCommand(Ssd1306SetDisplayClockDiv) < 0)
         return -3;
 
     /// the clock div
@@ -58,7 +58,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -4;
 
     /// set multiplex
-    if (ssd1306->runCommand(ssd1306SetMultiplex) < 0)                     /// 0xa8
+    if (ssd1306->runCommand(ssd1306SetMultiplex) < 0)
         return -5;
 
     /// the multiplex
@@ -75,11 +75,11 @@ int initDisplay(SSD1306 *ssd1306)
 
 
     /// set start line
-    if (ssd1306->runCommand(ssd1306SetStartLine | 0x0) < 0)                  /// 0x40
+    if (ssd1306->runCommand(ssd1306SetStartLine | 0x0) < 0)
         return -9;
 
     /// set charge pump
-    if (ssd1306->runCommand(ssd1306ChcargePump) < 0)                         /// 0x40
+    if (ssd1306->runCommand(ssd1306ChcargePump) < 0)
         return -10;
 
     /// charge pump set to external vcc
@@ -87,7 +87,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -11;
 
     /// set memory addressing mode
-    if (ssd1306->runCommand(ssd1306MemoryMode) < 0)                          /// 0x20
+    if (ssd1306->runCommand(ssd1306MemoryMode) < 0)
         return -12;
 
     /// memory mode set to 0x00
@@ -95,7 +95,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -13;
 
     /// set Seg Re Map
-    if (ssd1306->runCommand(ssd1306SegReMap) < 0)                          /// 0xA0
+    if (ssd1306->runCommand(ssd1306SegReMap) < 0)
         return -14;
 
     /// set Com Scan to Dec (write from top to bottom)
@@ -103,7 +103,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -15;
 
     /// set Com Pins
-    if (ssd1306->runCommand(Ssd1306SetComPins) < 0)                          /// 0xDA
+    if (ssd1306->runCommand(Ssd1306SetComPins) < 0)
         return -16;
 
     /// the com pins
@@ -111,7 +111,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -17;
 
     /// set contrast
-    if (ssd1306->runCommand(Ssd1306SetContrast) < 0)                          /// 0x81
+    if (ssd1306->runCommand(Ssd1306SetContrast) < 0)
         return -18;
 
     /// internal vcc, run contrast 0xCF
@@ -119,7 +119,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -19;
 
     /// set precharge
-    if (ssd1306->runCommand(Ssd1306SetPreCharge) < 0)                         /// 0xD9
+    if (ssd1306->runCommand(Ssd1306SetPreCharge) < 0)
         return -20;
 
     /// internal vcc, run precharge 0xF1
@@ -127,7 +127,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -21;
 
     /// set vcomdetect
-    if (ssd1306->runCommand(Ssd1306SetVComDetect) < 0)                         /// 0xDB
+    if (ssd1306->runCommand(Ssd1306SetVComDetect) < 0)
         return -22;
 
     /// vcom detect
@@ -135,12 +135,12 @@ int initDisplay(SSD1306 *ssd1306)
         return -23;
 
     /// set display on-resume
-    if (ssd1306->runCommand(Ssd1306_DisplayAllOnResume) < 0)                    /// 0xA4
+    if (ssd1306->runCommand(Ssd1306_DisplayAllOnResume) < 0)
         return -24;
 
 #if 1
     /// set normal display
-    if (ssd1306->runCommand(Ssd1306NormalDisplay) < 0)                           /// 0xA6
+    if (ssd1306->runCommand(Ssd1306NormalDisplay) < 0)
         return -25;
 #else
     if (ssd1306->runCommand(Ssd1306InvertDisplay) < 0)
@@ -148,9 +148,10 @@ int initDisplay(SSD1306 *ssd1306)
 #endif
 
     /// set normal display
-    if (ssd1306->runCommand(Ssd1306DisplayOn) < 0)                               /// 0xAF
+    if (ssd1306->runCommand(Ssd1306DisplayOn) < 0)
         return -27;
 
+    /// clear display
     if (ssd1306->clearDisplay() < 0)
         return -28;
 
@@ -158,6 +159,7 @@ int initDisplay(SSD1306 *ssd1306)
 }
 
 
+/// create a string containing date and time
 int timeDateString(unsigned char *buffer)
 {
     time_t rawtime;
@@ -180,6 +182,8 @@ int timeDateString(unsigned char *buffer)
 int main(int argc, char **argv)
 {
     std::cout << "ex_ssd1306" << std::endl;
+
+    long p0 = 99500;
 
     /// create bmp180 instance - set device to "/dev/i2c-1"
     Bmp180 bmp180((char*)FirmwareI2CDeviceses::i2c_1);
@@ -254,15 +258,9 @@ int main(int argc, char **argv)
                 return -1;
             }
 
-            /// pressure...
-            if (bmp180.readPressure(&pressure, oss_mode, true) < 0) {
-                std::cerr << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
-                return 0;
-            }
-
             /// populate buffer with last part of upper case letters
             memset(buffer, 0, 26);
-            size = snprintf((char*)buffer, 25, "Pressure %ld Pa", pressure);
+            size = snprintf((char*)buffer, 25, "P0          %ld Pa", p0);
             if (size < 0 || size > 25) {
                 std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
                 return -1;
@@ -274,9 +272,15 @@ int main(int argc, char **argv)
                 return -1;
             }
 
+            /// pressure...
+            if (bmp180.readPressure(&pressure, oss_mode, true) < 0) {
+                std::cerr << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
+                return 0;
+            }
+
             /// populate buffer with last part of upper case letters
             memset(buffer, 0, 26);
-            size = snprintf((char*)buffer, 25, "Altitude %4.2f Meter", altitude(pressure, 99500));
+            size = snprintf((char*)buffer, 25, "Pressure    %ld Pa", pressure);
             if (size < 0 || size > 25) {
                 std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
                 return -1;
@@ -287,9 +291,23 @@ int main(int argc, char **argv)
                 std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
                 return -1;
             }
+
+            /// populate buffer with last part of upper case letters
+            memset(buffer, 0, 26);
+            size = snprintf((char*)buffer, 25, "Altitude %4.2f Meter", altitude(pressure, p0));
+            if (size < 0 || size > 25) {
+                std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
+                return -1;
+            }
+
+            /// write last part of upper case letters
+            if (ssd1306.writeLine(5, buffer) < 0) {
+                std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
+                return -1;
+            }
             loop = 0;
         }
-
+#if 0
         memset(buffer, 0, 26);
         size = snprintf((char*)buffer, 25, "Time and date at exec");
         if (size < 0 || size > 25) {
@@ -301,6 +319,7 @@ int main(int argc, char **argv)
             std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
             return -1;
         }
+#endif
 
         /// get time and date string
         if (timeDateString(buffer) < 0) {

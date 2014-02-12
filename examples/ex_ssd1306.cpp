@@ -35,19 +35,19 @@ int initDisplay(SSD1306 *ssd1306)
     /// toggle reset
     gpio.setGpioDirection(GPIO::Gpio8, GPIO::GpioOutput);
     gpio.setGpio(GPIO::Gpio8, GPIO::GpioOn);                           /// on
-    usleep(1000);                                                       /// on for  1 ms
+    usleep(1000);                                                      /// on for  1 ms
     gpio.setGpio(GPIO::Gpio8, GPIO::GpioOff);                          /// off
-    usleep(10000);                                                      /// off for 10 ms
+    usleep(10000);                                                     /// off for 10 ms
     gpio.setGpio(GPIO::Gpio8, GPIO::GpioOn);                           /// switch on and let be on (enabled)
 
     gpio.closeDevice();
 
     /// display off
-    if (ssd1306->runCommand(Ssd1306DisplayOff) < 0)                      /// 0xae
+    if (ssd1306->runCommand(Ssd1306DisplayOff) < 0)
         return -2;
 
     /// set display clock div
-    if (ssd1306->runCommand(Ssd1306SetDisplayClockDiv) < 0)               /// 0xd5
+    if (ssd1306->runCommand(Ssd1306SetDisplayClockDiv) < 0)
         return -3;
 
     /// the clock div
@@ -55,7 +55,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -4;
 
     /// set multiplex
-    if (ssd1306->runCommand(ssd1306SetMultiplex) < 0)                     /// 0xa8
+    if (ssd1306->runCommand(ssd1306SetMultiplex) < 0)
         return -5;
 
     /// the multiplex
@@ -72,11 +72,11 @@ int initDisplay(SSD1306 *ssd1306)
 
 
     /// set start line
-    if (ssd1306->runCommand(ssd1306SetStartLine | 0x0) < 0)                  /// 0x40
+    if (ssd1306->runCommand(ssd1306SetStartLine | 0x0) < 0)
         return -9;
 
     /// set charge pump
-    if (ssd1306->runCommand(ssd1306ChcargePump) < 0)                         /// 0x40
+    if (ssd1306->runCommand(ssd1306ChcargePump) < 0)
         return -10;
 
     /// charge pump set to external vcc
@@ -84,7 +84,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -11;
 
     /// set memory addressing mode
-    if (ssd1306->runCommand(ssd1306MemoryMode) < 0)                          /// 0x20
+    if (ssd1306->runCommand(ssd1306MemoryMode) < 0)
         return -12;
 
     /// memory mode set to 0x00
@@ -92,7 +92,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -13;
 
     /// set Seg Re Map
-    if (ssd1306->runCommand(ssd1306SegReMap) < 0)                          /// 0xA0
+    if (ssd1306->runCommand(ssd1306SegReMap) < 0)
         return -14;
 
     /// set Com Scan to Dec (write from top to bottom)
@@ -100,7 +100,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -15;
 
     /// set Com Pins
-    if (ssd1306->runCommand(Ssd1306SetComPins) < 0)                          /// 0xDA
+    if (ssd1306->runCommand(Ssd1306SetComPins) < 0)
         return -16;
 
     /// the com pins
@@ -108,7 +108,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -17;
 
     /// set contrast
-    if (ssd1306->runCommand(Ssd1306SetContrast) < 0)                          /// 0x81
+    if (ssd1306->runCommand(Ssd1306SetContrast) < 0)
         return -18;
 
     /// internal vcc, run contrast 0xCF
@@ -116,7 +116,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -19;
 
     /// set precharge
-    if (ssd1306->runCommand(Ssd1306SetPreCharge) < 0)                         /// 0xD9
+    if (ssd1306->runCommand(Ssd1306SetPreCharge) < 0)
         return -20;
 
     /// internal vcc, run precharge 0xF1
@@ -124,7 +124,7 @@ int initDisplay(SSD1306 *ssd1306)
         return -21;
 
     /// set vcomdetect
-    if (ssd1306->runCommand(Ssd1306SetVComDetect) < 0)                         /// 0xDB
+    if (ssd1306->runCommand(Ssd1306SetVComDetect) < 0)
         return -22;
 
     /// vcom detect
@@ -132,12 +132,12 @@ int initDisplay(SSD1306 *ssd1306)
         return -23;
 
     /// set display on-resume
-    if (ssd1306->runCommand(Ssd1306_DisplayAllOnResume) < 0)                    /// 0xA4
+    if (ssd1306->runCommand(Ssd1306_DisplayAllOnResume) < 0)
         return -24;
 
 #if 1
     /// set normal display
-    if (ssd1306->runCommand(Ssd1306NormalDisplay) < 0)                           /// 0xA6
+    if (ssd1306->runCommand(Ssd1306NormalDisplay) < 0)
         return -25;
 #else
     if (ssd1306->runCommand(Ssd1306InvertDisplay) < 0)
@@ -145,9 +145,10 @@ int initDisplay(SSD1306 *ssd1306)
 #endif
 
     /// set normal display
-    if (ssd1306->runCommand(Ssd1306DisplayOn) < 0)                               /// 0xAF
+    if (ssd1306->runCommand(Ssd1306DisplayOn) < 0)
         return -27;
 
+    /// clear display
     if (ssd1306->clearDisplay() < 0)
         return -28;
 
@@ -155,18 +156,23 @@ int initDisplay(SSD1306 *ssd1306)
 }
 
 
-int writeImage(SSD1306* ssd1306, unsigned char image[1023])
+/// write image (1024 bytes) to display
+int writeImage(SSD1306* ssd1306, unsigned char image[1024])
 {
+    /// write image (1024 bytes) to display
     if (ssd1306->writeImage(image) < 0)
         return -1;
-    usleep(1000000);
+
     return 0;
 }
 
 
 int writeByteTest(SSD1306 *ssd1306)
 {
+    /// for all 8 lines on display
     for (int line = 0; line < 8; line++) {
+
+        /// 128 pixels across - each line is 8 byte hi
         for (int position = 0; position < 128; position++) {
 
             //std::cout << "line " << line << " position " << position << std::endl;
@@ -181,11 +187,10 @@ int writeByteTest(SSD1306 *ssd1306)
         } /// position
     } /// line
 
-    usleep(300000);
     ssd1306->clearDisplay();
 }
 
-
+/// create time and date string
 int timeDateString(unsigned char *buffer)
 {
     time_t rawtime;
@@ -204,6 +209,7 @@ int timeDateString(unsigned char *buffer)
     return size;
 }
 
+/// create network strings and write them to the display
 int networkPage(SSD1306 *ssd1306)
 {
     unsigned char buffer[26];
