@@ -209,6 +209,7 @@ int timeDateString(unsigned char *buffer)
     return size;
 }
 
+
 /// create network strings and write them to the display
 int networkPage(SSD1306 *ssd1306)
 {

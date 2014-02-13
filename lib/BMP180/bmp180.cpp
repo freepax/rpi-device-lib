@@ -99,23 +99,29 @@ int Bmp180::readChipId()
 }
 
 
-int Bmp180::readTemperatur(float *temperatur)
+/** read temperature from the bmp180 pressure sensor
+ *
+ * @pascal: The measured temerature goes here
+ *
+ * @return: 0 on success, negative on failure
+ */
+int Bmp180::readTemperature(float *temperature)
 {
-    if (readTemperatur() < 0) {
-        std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " readTemperatur failed" << std::endl;
+    if (readTemperature() < 0) {
+        std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " readTemperature failed" << std::endl;
         return -1;
     }
 
-    //*temperatur = (float)(mCalc.b5 + 8) / 16.0 / 10.0;
-    *temperatur = ((mCalc.b5 + 8) >> 4) / 10.0;  /* temperature in deg C*/
+    //*temperature = (float)(mCalc.b5 + 8) / 16.0 / 10.0;
+    *temperature = ((mCalc.b5 + 8) >> 4) / 10.0;  /* temperature in deg C*/
     return 0;
 }
 
 
-int Bmp180::readTemperatur()
+int Bmp180::readTemperature()
 {
-    /// setup for temperatur measurement
-    unsigned char buffer[] = { BMP180::ControlRegisterAddress, BMP180::TemperaturConfig };
+    /// setup for temperature measurement
+    unsigned char buffer[] = { BMP180::ControlRegisterAddress, BMP180::TemperatureConfig };
 
     if (writeData(buffer, 2) < 0) {
         std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " writeData failed" << std::endl;
@@ -131,21 +137,18 @@ int Bmp180::readTemperatur()
         return -2;
     }
 
-    /// read temperatur data
+    /// read temperature data
     if (readData(buffer, 2) < 0) {
         std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " readData failed" << std::endl;
         return -3;
     }
 
-    /// calculate temperatur
+    /// calculate temperature
     mCalc.UT = buffer[0] << 8 | buffer[1];
 
     mCalc.x1 = (((long)mCalc.UT - (long) mCalibration.ac6) * (long) mCalibration.ac5) >> 15;
-    //mCalc.x1 = (mCalc.UT - mCalibration.ac6) * mCalibration.ac5 / 32768;
     mCalc.x2 = ((long) mCalibration.mc << 11) / (mCalc.x1 + mCalibration.md);
-    //mCalc.x2 = mCalibration.mc * 2048 / (mCalc.x1 + mCalibration.md);
     mCalc.b5 = mCalc.x1 + mCalc.x2;
-    //mCalc.b5 = mCalc.x1 + mCalc.x2;
 
     if (mDebug) {
         std::cout << "UT     " << std::dec << mCalc.UT << std::endl;
@@ -159,20 +162,31 @@ int Bmp180::readTemperatur()
 }
 
 
-int Bmp180::readPressure(long *pascal, int oss, bool update_temperatur)
+/** read pressure from the bmp180 pressure sensor
+ *
+ * @pascal: converted pressure array
+ * @oss: OverSamplingSetting (1, 2, 4 or 8 oversamples - delay: 4.5ms, 7.5ms, 13.5ms and 25.5ms)
+ * @samples: numbers of samples to read (into pascal[])
+ * @update_temperature: wheter to update temperature reading or not (say yes to this if current reading is older than 1 sec.)
+ *
+ * @return: 0 on success, negative on failure
+ */
+int Bmp180::readPressure(long pascal[], int oss, int samples, bool update_temperature)
 {
-    if (readPressure(oss, update_temperatur) < 0) {
-        std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
-        return -1;
-    }
+    for (int i = 0; i < samples; i++) {
+        if (readPressure(oss, update_temperature) < 0) {
+            std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
+            return -1;
+        }
 
-    *pascal = mCalc.p;
+        pascal[i] = mCalc.p;
+    }
 
     return 0;
 }
 
 
-int Bmp180::readPressure(int oss, bool update_temperatur)
+int Bmp180::readPressure(int oss, bool update_temperature)
 {
     /// make sure requested oss is reasonable
     if (ModeOss0 < 0 || oss > ModeOss3) {
@@ -180,10 +194,10 @@ int Bmp180::readPressure(int oss, bool update_temperatur)
         return -1;
     }
 
-    /// read temperatur if requested (If old temp measurement is older that 1 sec. do a new temp reading)
-    if (update_temperatur) {
-        if (readTemperatur() < 0) {
-            std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " readTemperatur failed" << std::endl;
+    /// read temperature if requested (If old temp measurement is older that 1 sec. do a new temp reading)
+    if (update_temperature) {
+        if (readTemperature() < 0) {
+            std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " readtemperature failed" << std::endl;
             return -2;
         }
     }

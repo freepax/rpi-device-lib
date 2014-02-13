@@ -19,6 +19,8 @@
 #include <font.h>
 
 
+static const int samples = 10;
+
 extern unsigned char arduino[1024];
 
 
@@ -158,6 +160,56 @@ int initDisplay(SSD1306 *ssd1306)
     return 0;
 }
 
+/// create network strings and write them to the display
+int writeNetworkLine(SSD1306 *ssd1306, int line)
+{
+    unsigned char buffer[26];
+    struct ifaddrs *ifaddr, *ifa;
+    char host[NI_MAXHOST];
+    int size = 0;
+
+    /// get addresses
+    if (getifaddrs(&ifaddr) == -1) {
+        std::cerr << __func__ << ":" << __LINE__ << "getifaddrs failed" << std::endl;
+        return -3;
+    }
+
+    /// loop over ifa list of devices and get hold of interfaces which is up
+    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        int family = ifa->ifa_addr->sa_family;
+
+        /// Only INET interfaces
+        if (family == AF_INET) {
+            int s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+            if (s != 0) {
+                printf("getnameinfo() failed: %s\n", gai_strerror(s));
+                return -4;
+            }
+
+            //  continue;
+            if (strcmp(ifa->ifa_name, "lo") != 0) {
+                //std::cout << "Interface " << ifa->ifa_name << " address " << host << std::endl;
+
+                /// prepare buffer for write
+                memset(buffer, 0, 26);
+                size = snprintf((char*)buffer, 25, "%s %s", ifa->ifa_name, host);
+                if (size < 0 || size > 25) {
+                    std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
+                    return -5;
+                }
+
+                /// write buffer to display
+                if (ssd1306->writeLine(line, buffer) < 0) {
+                    std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
+                    return -6;
+                }
+            }
+        } /// if family == AF_INET
+    } /// for loop
+
+    return 0;
+}
+
 
 /// create a string containing date and time
 int timeDateString(unsigned char *buffer)
@@ -183,7 +235,7 @@ int main(int argc, char **argv)
 {
     std::cout << "ex_ssd1306" << std::endl;
 
-    long p0 = 99500;
+    long p0 = 99550;
 
     /// create bmp180 instance - set device to "/dev/i2c-1"
     Bmp180 bmp180((char*)FirmwareI2CDeviceses::i2c_1);
@@ -219,11 +271,12 @@ int main(int argc, char **argv)
     while ( true) {
         int size = 0;
         unsigned char buffer[26];
-        long pressure = 0;
-        float temperatur = 0.0;
+        long pressure[samples];
+        float temperature = 0.0;
         int oss_mode = ModeOss3;
 
-        /// populate buffer with first part of upper case letters
+#if 0
+        /// populate buffer with heading
         memset(buffer, 0, 26);
         size = snprintf((char*)buffer, 25, "BMP 180 data");
         if (size < 0 || size > 25) {
@@ -231,34 +284,35 @@ int main(int argc, char **argv)
             return -1;
         }
 
-        /// write first part of upper case letters to display
+        /// write heading to display
         if (ssd1306.writeLine(0, buffer) < 0) {
             std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
             return -2;
         }
+#endif
 
         if (loop ++ == 5) {
-            /// temperatur...
-            if (bmp180.readTemperatur(&temperatur) < 0) {
+            /// temperature...
+            if (bmp180.readTemperature(&temperature) < 0) {
                 std::cerr << __func__ << ":" << __LINE__ << " readRemperatur failed" << std::endl;
                 return -1;
             }
 
-            /// populate buffer with last part of upper case letters
+            /// populate buffer with temperature reading
             memset(buffer, 0, 26);
-            size = snprintf((char*)buffer, 25, "Temperature %4.2f c", temperatur);
+            size = snprintf((char*)buffer, 25, "temperature %4.2f c", temperature);
             if (size < 0 || size > 25) {
                 std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
                 return -1;
             }
 
-            /// write last part of upper case letters
+            /// write temperature reading to display
             if (ssd1306.writeLine(2, buffer) < 0) {
                 std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
                 return -1;
             }
 
-            /// populate buffer with last part of upper case letters
+            /// populate buffer with P0 pressure
             memset(buffer, 0, 26);
             size = snprintf((char*)buffer, 25, "P0          %ld Pa", p0);
             if (size < 0 || size > 25) {
@@ -266,60 +320,60 @@ int main(int argc, char **argv)
                 return -1;
             }
 
-            /// write last part of upper case letters
+            /// write p0 pressure to display
             if (ssd1306.writeLine(3, buffer) < 0) {
                 std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
                 return -1;
             }
 
-            /// pressure...
-            if (bmp180.readPressure(&pressure, oss_mode, true) < 0) {
-                std::cerr << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
-                return 0;
+            for (int i = 0; i < samples; i++) {
+                /// read pressure
+                if (bmp180.readPressure(pressure, oss_mode, 1, true) < 0) {
+                    std::cerr << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
+                    return 0;
+                }
             }
 
-            /// populate buffer with last part of upper case letters
+            long pa = 0;
+            for (int i = 0; i < samples; i++)
+                pa += pressure[i];
+            pa /= 10;
+
+            /// populate buffer with pressure reading
             memset(buffer, 0, 26);
-            size = snprintf((char*)buffer, 25, "Pressure    %ld Pa", pressure);
+            size = snprintf((char*)buffer, 25, "Pressure    %ld Pa", pressure[0]);
             if (size < 0 || size > 25) {
                 std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
                 return -1;
             }
 
-            /// write last part of upper case letters
+            /// write pressure reading to display
             if (ssd1306.writeLine(4, buffer) < 0) {
                 std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
                 return -1;
             }
 
-            /// populate buffer with last part of upper case letters
+            /// populate buffer with altitude
             memset(buffer, 0, 26);
-            size = snprintf((char*)buffer, 25, "Altitude %4.2f Meter", altitude(pressure, p0));
+            size = snprintf((char*)buffer, 25, "Altitude %4.2f Meter", altitude(pressure[0], p0));
             if (size < 0 || size > 25) {
                 std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
                 return -1;
             }
 
-            /// write last part of upper case letters
+            /// write altitude to display
             if (ssd1306.writeLine(5, buffer) < 0) {
                 std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
                 return -1;
             }
+
+            /// write wlan ip on display
+            if (writeNetworkLine(&ssd1306, 0) < 0) {
+                std::cerr << __func__ << ":" << __LINE__ << "writeNetworkLine failed" << std::endl;
+                return -1;
+            }
             loop = 0;
         }
-#if 0
-        memset(buffer, 0, 26);
-        size = snprintf((char*)buffer, 25, "Time and date at exec");
-        if (size < 0 || size > 25) {
-            std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
-            return -1;
-        }
-
-        if (ssd1306.writeLine(6, buffer) < 0) {
-            std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
-            return -1;
-        }
-#endif
 
         /// get time and date string
         if (timeDateString(buffer) < 0) {

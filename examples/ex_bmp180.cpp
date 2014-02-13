@@ -12,7 +12,7 @@ unsigned char oss_mode = ModeOss3;
 int main(int argc, char **argv)
 {
     long pressure = 0;
-    float temperatur = 0.0;
+    float temperature = 0.0;
 
     /// create bmp180 instance - set device to "/dev/i2c-1"
     Bmp180 bmp180((char*)FirmwareI2CDeviceses::i2c_1);
@@ -32,16 +32,16 @@ int main(int argc, char **argv)
 
     std::cout << "Chip ID 0x" << std::hex << id << std::dec << std::endl;
 
-    /// read temperatur and pressure 10 times
+    /// read temperature and pressure 10 times
     for (int i = 0; i < 10; i++) {
 
-        /// temperatur...
-        if (bmp180.readTemperatur(&temperatur) < 0) {
-            std::cerr << __func__ << ":" << __LINE__ << " readRemperatur failed" << std::endl;
+        /// temperature...
+        if (bmp180.readTemperature(&temperature) < 0) {
+            std::cerr << __func__ << ":" << __LINE__ << " readTemperature failed" << std::endl;
             return -1;
         }
 
-        //std::cout << "Temperatur " << std::dec << temperatur << std::endl;
+        //std::cout << "temperature " << std::dec << temperature << std::endl;
 
         /// pressure...
         if (bmp180.readPressure(&pressure, oss_mode, true) < 0) {
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         }
 
         //std::cout << "Pressure " << std::dec << pressure;
-        printf("Temperaur %4.2f Pressure %ld    Altitude %4.2f\n", temperatur, pressure, altitude(pressure, 99700));
+        printf("Temperaur %4.2f Pressure %ld    Altitude %4.2f\n", temperature, pressure, altitude(pressure, 99700));
     }
 
     if (bmp180.closeDevice() < 0) {

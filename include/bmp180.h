@@ -35,7 +35,7 @@ static const unsigned char ConvertedValueMsb        = 0xF6;
 static const unsigned char ConvertedValueLsb        = 0xF7;
 static const unsigned char ConvertedValueXLsb       = 0xF8;
 
-static const unsigned char TemperaturConfig         = 0x2E;     /// max conversion time  4.5 ms
+static const unsigned char TemperatureConfig        = 0x2E;     /// max conversion time  4.5 ms
 
 static const unsigned char PressureOss0             = 0x34;     /// max conversion time  4.5 ms
 static const unsigned char PressureOss1             = 0x74;     /// max conversion time  7.5 ms
@@ -85,13 +85,13 @@ public:
 
     int readChipId();
 
-    int readTemperatur(float *temperatur);
-    int readPressure(long *pascal, int oss = ModeOss3, bool update_temperatur = true);
+    int readTemperature(float *temperature);
+    int readPressure(long pascal[], int oss = ModeOss3, int samples = 1, bool update_temperature = true);
 
 
 private:
-    int readTemperatur();
-    int readPressure(int oss, bool update_temperatur);
+    int readTemperature();
+    int readPressure(int oss, bool update_temperature);
 
     bmp_calck_t mCalc;
     bmp_calibration_t mCalibration;
