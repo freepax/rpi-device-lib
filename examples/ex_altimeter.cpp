@@ -11,7 +11,6 @@
 #include <ifaddrs.h>
 #include <stdlib.h>
 
-
 #include <gpio.h>
 #include <ssd1306.h>
 #include <bmp180.h>
@@ -19,9 +18,7 @@
 #include <font.h>
 
 
-static const int samples = 10;
-
-extern unsigned char arduino[1024];
+static const int samples = 1;
 
 
 int initDisplay(SSD1306 *ssd1306)
@@ -160,13 +157,15 @@ int initDisplay(SSD1306 *ssd1306)
     return 0;
 }
 
-/// create network strings and write them to the display
+/// create network string and write it to the display
 int writeNetworkLine(SSD1306 *ssd1306, int line)
 {
-    unsigned char buffer[26];
+    unsigned char buffer[25];
     struct ifaddrs *ifaddr, *ifa;
     char host[NI_MAXHOST];
     int size = 0;
+    bool ip_found = false;
+
 
     /// get addresses
     if (getifaddrs(&ifaddr) == -1) {
@@ -186,12 +185,14 @@ int writeNetworkLine(SSD1306 *ssd1306, int line)
                 return -4;
             }
 
-            //  continue;
+            /// skip loop back
             if (strcmp(ifa->ifa_name, "lo") != 0) {
+                ip_found = true;
+
                 //std::cout << "Interface " << ifa->ifa_name << " address " << host << std::endl;
 
-                /// prepare buffer for write
-                memset(buffer, 0, 26);
+                /// clear and populate buffer
+                memset(buffer, 0, 25);
                 size = snprintf((char*)buffer, 25, "%s %s", ifa->ifa_name, host);
                 if (size < 0 || size > 25) {
                     std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
@@ -207,6 +208,14 @@ int writeNetworkLine(SSD1306 *ssd1306, int line)
         } /// if family == AF_INET
     } /// for loop
 
+    /// clear line if no network is found
+    if (ip_found == false) {
+        if (ssd1306->clearLine(line) < 0) {
+            std::cerr << __func__ << ":" << __LINE__ << "clearLine failed" << std::endl;
+            return -1;
+        }
+    }
+
     return 0;
 }
 
@@ -220,7 +229,7 @@ int timeDateString(unsigned char *buffer)
     time(&rawtime);
     timeinfo = localtime (&rawtime);
 
-    memset(buffer, 0, 26);
+    memset(buffer, 0, 25);
     int size = snprintf((char*)buffer, 25, "%s", asctime (timeinfo));
     if (size < 0 || size > 25) {
         std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
@@ -235,7 +244,7 @@ int main(int argc, char **argv)
 {
     std::cout << "ex_ssd1306" << std::endl;
 
-    long p0 = 99550;
+    long p0 = 99370;
 
     /// create bmp180 instance - set device to "/dev/i2c-1"
     Bmp180 bmp180((char*)FirmwareI2CDeviceses::i2c_1);
@@ -245,7 +254,6 @@ int main(int argc, char **argv)
         std::cerr << __func__ << ":" << __LINE__ << " openDevice failed" << std::endl;
         return -1;
     }
-
 
     /// SSD device
     SSD1306 ssd1306((char*)FirmwareI2CDeviceses::i2c_1);
@@ -268,29 +276,14 @@ int main(int argc, char **argv)
 
     int loop = 5;
 
-    while ( true) {
+    while (true) {
         int size = 0;
         unsigned char buffer[26];
         long pressure[samples];
         float temperature = 0.0;
         int oss_mode = ModeOss3;
 
-#if 0
-        /// populate buffer with heading
-        memset(buffer, 0, 26);
-        size = snprintf((char*)buffer, 25, "BMP 180 data");
-        if (size < 0 || size > 25) {
-            std::cerr << __func__ << ": " << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
-            return -1;
-        }
-
-        /// write heading to display
-        if (ssd1306.writeLine(0, buffer) < 0) {
-            std::cerr << __func__ << ":" << __LINE__ << "writeLine failed" << std::endl;
-            return -2;
-        }
-#endif
-
+        /// don't read temperature and pressure too often
         if (loop ++ == 5) {
             /// temperature...
             if (bmp180.readTemperature(&temperature) < 0) {
@@ -300,7 +293,7 @@ int main(int argc, char **argv)
 
             /// populate buffer with temperature reading
             memset(buffer, 0, 26);
-            size = snprintf((char*)buffer, 25, "temperature %4.2f c", temperature);
+            size = snprintf((char*)buffer, 25, "Temperature %4.2f c", temperature);
             if (size < 0 || size > 25) {
                 std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
                 return -1;
@@ -326,22 +319,20 @@ int main(int argc, char **argv)
                 return -1;
             }
 
-            for (int i = 0; i < samples; i++) {
-                /// read pressure
-                if (bmp180.readPressure(pressure, oss_mode, 1, true) < 0) {
-                    std::cerr << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
-                    return 0;
-                }
+            /// read pressure
+            if (bmp180.readPressure(pressure, oss_mode, samples, true) < 0) {
+                std::cerr << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
+                return 0;
             }
 
             long pa = 0;
             for (int i = 0; i < samples; i++)
                 pa += pressure[i];
-            pa /= 10;
+            pa /= samples;
 
             /// populate buffer with pressure reading
             memset(buffer, 0, 26);
-            size = snprintf((char*)buffer, 25, "Pressure    %ld Pa", pressure[0]);
+            size = snprintf((char*)buffer, 25, "Pressure    %ld Pa", pa);
             if (size < 0 || size > 25) {
                 std::cerr << __func__ << ":" << __LINE__ << "snprintf failed (" << size << ")" << std::endl;
                 return -1;
@@ -387,6 +378,7 @@ int main(int argc, char **argv)
             return -1;
         }
 
+        /// sleep 10 msec
         usleep(100000);
 
 
