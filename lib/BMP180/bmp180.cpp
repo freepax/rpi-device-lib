@@ -1,9 +1,11 @@
 #include <iostream>
 #include <iomanip>
 
+#include <stdio.h>
 #include <unistd.h>
 #include <math.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include <bmp180.h>
 #include <binary.h>
@@ -112,7 +114,6 @@ int Bmp180::readTemperature(float *temperature)
         return -1;
     }
 
-    //*temperature = (float)(mCalc.b5 + 8) / 16.0 / 10.0;
     *temperature = ((mCalc.b5 + 8) >> 4) / 10.0;  /* temperature in deg C*/
     return 0;
 }
@@ -174,10 +175,14 @@ int Bmp180::readTemperature()
 int Bmp180::readPressure(long pascal[], int oss, int samples, bool update_temperature)
 {
     for (int i = 0; i < samples; i++) {
+        //struct timeval  tv1, tv2;
+        //gettimeofday(&tv1, NULL);
         if (readPressure(oss, update_temperature) < 0) {
             std::cerr << "Bmp180::" << __func__ << ":" << __LINE__ << " readPressure failed" << std::endl;
             return -1;
         }
+        //gettimeofday(&tv2, NULL);
+        //printf ("Total time = %f seconds\n", (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec));
 
         pascal[i] = mCalc.p;
     }
