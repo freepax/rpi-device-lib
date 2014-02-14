@@ -159,7 +159,8 @@ int SSD1306::writeLine(unsigned char page, unsigned char data[25])
             offset++;
             f = 0;
         }
-        buffer[i] = font[data[offset] * 5 + f++];
+        if (i < 125)
+            buffer[i] = font[data[offset] * 5 + f++];
     }
 
     if (write(mFd, buffer, Ssd1306LcdWitdh + 1) < 0) {
@@ -249,12 +250,12 @@ int SSD1306::clearLine(int line)
         return -6;
     }
 
-    unsigned char data[65];
-    memset(data, 0, 65);
+    unsigned char data[128];
+    memset(data, 0, 128);
     data[0] = 0x40;
 
     /// write 65 bytes
-    if (write(mFd, data, 65) < 0) {
+    if (write(mFd, data, 129) < 0) {
         std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed" << std::endl;
         return -7;
     }
