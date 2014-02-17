@@ -33,6 +33,36 @@ int SSD1306::setAddress(unsigned char address)
 }
 
 
+int SSD1306::setScroll(unsigned char scroll, unsigned char startPage, unsigned char endPage, unsigned char timeInterval, unsigned char offset)
+{
+    /// populate buffer to write
+    unsigned char buffer[] = { scroll,  0x00, startPage, timeInterval, endPage, offset };
+
+    /// make sure scroll is not active when scroll settings are updated
+    int status = runCommand(Ssd1306DeactivateScroll);
+    if (status < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed with status " << status << std::endl;
+        return -1;
+    }
+
+    /// write six bytes
+    status = write(mFd, buffer, 6);
+    if (status != 6) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " write failed with status " << status << std::endl;
+        return -2;
+    }
+
+    /// activate scroll
+    status = runCommand(Ssd1306ActivateScroll);
+    if (status < 0) {
+        std::cerr << "SSD1306::"  << __func__ << ":" << __LINE__ << " runCommand failed with status " << status << std::endl;
+        return -3;
+    }
+
+    return 0;
+}
+
+
 int SSD1306::runCommand(unsigned char command)
 {
     unsigned char buffer[] = { 0b00000000, command };
@@ -215,6 +245,7 @@ int SSD1306::writeByte(unsigned char line, unsigned char position, unsigned char
 
     return 0;
 }
+
 
 int SSD1306::clearLine(int line)
 {

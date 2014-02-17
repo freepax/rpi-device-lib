@@ -79,24 +79,14 @@ static const unsigned char SSD1306Address0 = 0b00111100;
 static const unsigned char SSD1306Address1 = 0b00111101;
 }
 
-namespace SSD1306Continuation {
-static const bool SSD1306ContinuationOff = true;
-static const bool SSD1306ContinuationOn  = false;
-}
 
-namespace SSD1306Command {
-static const bool SSD1306CommandCommand = false;
-static const bool SSD1306CommandData    = true;
-}
-
-
-static const unsigned int Ssd1306LcdWitdh   = 128;
-static const unsigned int SSD1306LcdPages   = 8;
-static const unsigned int Ssd1306LcdHeight64  = 64;
-//static const unsigned int Ssd1306LcdHeight32  = 32;
+static const unsigned int Ssd1306LcdWitdh       = 128;
+static const unsigned int SSD1306LcdPages       = 8;
+static const unsigned int Ssd1306LcdHeight64    = 64;
+static const unsigned int Ssd1306LcdHeight32    = 32;
 
 static const unsigned int Ssd1306SetContrast                        = 0x81;
-static const unsigned int Ssd1306_DisplayAllOnResume                = 0xA4;
+static const unsigned int Ssd1306DisplayAllOnResume                 = 0xA4;
 static const unsigned int Ssd1306_DisplayAllOn                      = 0xA5;
 static const unsigned int Ssd1306NormalDisplay                      = 0xA6;
 static const unsigned int Ssd1306InvertDisplay                      = 0xA7;
@@ -135,9 +125,10 @@ static const unsigned int ssd1306SwitchCaPVcc                       = 0x2;
 static const unsigned int Ssd1306ActivateScroll                     = 0x2F;
 static const unsigned int Ssd1306DeactivateScroll                   = 0x2E;
 static const unsigned int Ssd1306SetVerticalScrollArea              = 0xA3;
+
 static const unsigned int Ssd1306RightHorizontalScroll              = 0x26;
 static const unsigned int Ssd1306LeftHorizontalScroll               = 0x27;
-static const unsigned int Ssd1306VerticalAndRrightHhorizontalScroll = 0x29;
+static const unsigned int Ssd1306VerticalAndRightHorizontalScroll   = 0x29;
 static const unsigned int Ssd1306VerticalAndLeftHorizontalScroll    = 0x2A;
 
 
@@ -149,17 +140,29 @@ public:
     /// dtor
     ~SSD1306() { closeDevice(); }
 
+    /// set i2c chip address
     int setAddress(unsigned char address);
-    int runCommand(unsigned char command);
-    int writeImage(unsigned char data[Ssd1306LcdWitdh * SSD1306LcdPages]);
-    int writeLine(unsigned char line, unsigned char data[25]);
-    int writeByte(unsigned char line, unsigned char position, unsigned char data);
-    int clearDisplay();
-    int clearLine(int line);
 
-private:
-    bool mCo;                               /// Continuation bit 0: data bytes only
-    bool mDc;                               /// 0: Data folling byte are command. 1: Following byte are GDDRAM data
+    /// run command
+    int runCommand(unsigned char command);
+
+    /// set and active scroll
+    int setScroll(unsigned char scroll, unsigned char startPage, unsigned char endPage, unsigned char timeInterval, unsigned char offset);
+
+    /// write image buffer (data) to display
+    int writeImage(unsigned char data[Ssd1306LcdWitdh * SSD1306LcdPages]);
+
+    /// write one (8 bit x 127) line to display (data is intepreated as fonts in include/font.h)
+    int writeLine(unsigned char line, unsigned char data[25]);
+
+    /// write arbitrary byte to display
+    int writeByte(unsigned char line, unsigned char position, unsigned char data);
+
+    /// clear entire display
+    int clearDisplay();
+
+    /// clear one line (one of the 8 pages)
+    int clearLine(int line);
 };
 
 #endif /// SSD1306_H
