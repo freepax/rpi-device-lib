@@ -18,12 +18,13 @@
 #include <font.h>
 
 
+long p0 = 99370;
 static const int samples = 1;
 
 
 int initDisplay(SSD1306 *ssd1306)
 {
-    /// need gpio to run the reset on display
+    /// need gpio to toggle the reset pin on the display
     Gpio gpio;
 
     /// open gpio device (/dev/mem)
@@ -35,124 +36,178 @@ int initDisplay(SSD1306 *ssd1306)
     int output = GPIO::Gpio24;
 
     /// toggle reset
-    gpio.setGpioDirection(output, GPIO::GpioOutput);
-    gpio.setGpio(output, GPIO::GpioOn);                           /// on
-    usleep(1000);                                                 /// on for  1 ms
-    gpio.setGpio(output, GPIO::GpioOff);                          /// off
-    usleep(10000);                                                /// off for 10 ms
+    gpio.setGpioDirection(output, GPIO::GpioOutput);              /// set gpio direction to output
+    gpio.setGpio(output, GPIO::GpioOn);                           /// switch on
+    usleep(1000);                                                 /// sleep 1 ms
+    gpio.setGpio(output, GPIO::GpioOff);                          /// switch off
+    usleep(10000);                                                /// sleep 10 ms
     gpio.setGpio(output, GPIO::GpioOn);                           /// switch on and let be on (enabled)
 
     gpio.closeDevice();
 
     /// display off
-    if (ssd1306->runCommand(Ssd1306DisplayOff) < 0)
+    if (ssd1306->runCommand(Ssd1306DisplayOff) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -2;
+    }
 
     /// set display clock div
-    if (ssd1306->runCommand(Ssd1306SetDisplayClockDiv) < 0)
+    if (ssd1306->runCommand(Ssd1306SetDisplayClockDiv) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -3;
+    }
 
     /// the clock div
-    if (ssd1306->runCommand(0x80) < 0)
+    if (ssd1306->runCommand(0x80) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -4;
+    }
 
     /// set multiplex
-    if (ssd1306->runCommand(ssd1306SetMultiplex) < 0)
+    if (ssd1306->runCommand(ssd1306SetMultiplex) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -5;
+    }
 
     /// the multiplex
-    if (ssd1306->runCommand(0x3f) < 0)
+    if (ssd1306->runCommand(0x3f) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -6;
+    }
 
     /// set display offset
-    if (ssd1306->runCommand(Ssd1306SetDisplayOffset) < 0)
+    if (ssd1306->runCommand(Ssd1306SetDisplayOffset) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -7;
+    }
 
     /// the display offset
-    if (ssd1306->runCommand(0x0) < 0)
+    if (ssd1306->runCommand(0x0) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -8;
+    }
 
 
     /// set start line
-    if (ssd1306->runCommand(ssd1306SetStartLine | 0x0) < 0)
+    if (ssd1306->runCommand(ssd1306SetStartLine | 0x0) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -9;
+    }
 
     /// set charge pump
-    if (ssd1306->runCommand(ssd1306ChcargePump) < 0)
+    if (ssd1306->runCommand(ssd1306ChcargePump) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -10;
+    }
 
     /// charge pump set to external vcc
-    if (ssd1306->runCommand(0x14) < 0)
+    if (ssd1306->runCommand(0x14) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -11;
+    }
 
     /// set memory addressing mode
-    if (ssd1306->runCommand(ssd1306MemoryMode) < 0)
+    if (ssd1306->runCommand(ssd1306MemoryMode) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -12;
+    }
 
     /// memory mode set to 0x00
-    if (ssd1306->runCommand(0x00) < 0)
+    if (ssd1306->runCommand(0x00) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -13;
+    }
 
     /// set Seg Re Map
-    if (ssd1306->runCommand(ssd1306SegReMap) < 0)
+    if (ssd1306->runCommand(ssd1306SegReMap) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -14;
+    }
 
     /// set Com Scan to Dec (write from top to bottom)
-    if (ssd1306->runCommand(ssd1306ComScanDec) < 0)
+    if (ssd1306->runCommand(ssd1306ComScanDec) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -15;
+    }
 
     /// set Com Pins
-    if (ssd1306->runCommand(Ssd1306SetComPins) < 0)
+    if (ssd1306->runCommand(Ssd1306SetComPins) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -16;
+    }
 
     /// the com pins
-    if (ssd1306->runCommand(0x12) < 0)
+    if (ssd1306->runCommand(0x12) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -17;
+    }
 
     /// set contrast
-    if (ssd1306->runCommand(Ssd1306SetContrast) < 0)
+    if (ssd1306->runCommand(Ssd1306SetContrast) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -18;
+    }
 
     /// internal vcc, run contrast 0xCF
-    if (ssd1306->runCommand(0xCF) < 0)
+    if (ssd1306->runCommand(0xCF) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -19;
+    }
 
     /// set precharge
-    if (ssd1306->runCommand(Ssd1306SetPreCharge) < 0)
+    if (ssd1306->runCommand(Ssd1306SetPreCharge) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -20;
+    }
 
     /// internal vcc, run precharge 0xF1
-    if (ssd1306->runCommand(0xF1) < 0)
+    if (ssd1306->runCommand(0xF1) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -21;
+    }
 
     /// set vcomdetect
-    if (ssd1306->runCommand(Ssd1306SetVComDetect) < 0)
+    if (ssd1306->runCommand(Ssd1306SetVComDetect) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -22;
+    }
 
     /// vcom detect
-    if (ssd1306->runCommand(0x40) < 0)
+    if (ssd1306->runCommand(0x40) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -23;
+    }
 
     /// set display on-resume
-    if (ssd1306->runCommand(Ssd1306_DisplayAllOnResume) < 0)
+    if (ssd1306->runCommand(Ssd1306DisplayAllOnResume) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -24;
+    }
 
 #if 1
     /// set normal display
-    if (ssd1306->runCommand(Ssd1306NormalDisplay) < 0)
+    if (ssd1306->runCommand(Ssd1306NormalDisplay) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -25;
+    }
 #else
-    if (ssd1306->runCommand(Ssd1306InvertDisplay) < 0)
+    if (ssd1306->runCommand(Ssd1306InvertDisplay) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -26;
+    }
 #endif
 
     /// set normal display
-    if (ssd1306->runCommand(Ssd1306DisplayOn) < 0)
+    if (ssd1306->runCommand(Ssd1306DisplayOn) < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " runCommand failed" << std::endl;
         return -27;
+    }
 
     /// clear display
-    if (ssd1306->clearDisplay() < 0)
+    if (ssd1306->clearDisplay() < 0) {
+        std::cerr << __func__ << ":" << __LINE__ << " clearDisplay failed" << std::endl;
         return -28;
+    }
 
     return 0;
 }
@@ -244,7 +299,11 @@ int main(int argc, char **argv)
 {
     std::cout << "ex_ssd1306" << std::endl;
 
-    long p0 = 99370;
+    std::cout << "argc " << argc << std::endl;
+    if (argc == 2) {
+        p0 = atol(argv[1]);
+        std::cout << "P0 set to " << std::dec << p0 << std::endl;
+    }
 
     /// create bmp180 instance - set device to "/dev/i2c-1"
     Bmp180 bmp180((char*)FirmwareI2CDeviceses::i2c_1);
@@ -329,6 +388,8 @@ int main(int argc, char **argv)
             for (int i = 0; i < samples; i++)
                 pa += pressure[i];
             pa /= samples;
+            double alt = 98.0;
+            printf("Calculated pressure %4.2f (altitude %4.2f)\n", pressure_at_sea(pa, alt), alt);
 
             /// populate buffer with pressure reading
             memset(buffer, 0, 26);
