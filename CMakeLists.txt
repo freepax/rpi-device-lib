@@ -28,6 +28,7 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 set(INCLUDE include)
 
+add_subdirectory (include)
 add_subdirectory (lib)
 add_subdirectory (examples)
-add_subdirectory (include)
+add_subdirectory (apps)

@@ -235,33 +235,7 @@ add_executable(ex_bmp180_static ${BMP180_SOURCES} ${BMP180_HEADERS})
 target_link_libraries(ex_bmp180 ${BMP180_LIB})
 target_link_libraries(ex_bmp180_static ${BMP180_STATIC_LIB})
 
-# Altimeter
-set(ALTIMETER_SOURCES
-    ex_altimeter.cpp
-)
 
-set(ALTIMETER_HEADERS
-    ../${INCLUDE}/bmp180.h
-)
-
-set(ALTIMETER_LIB
-    bmp180
-    gpio
-    ssd1306
-    binary
-)
-
-set(ALTIMETER_STATIC_LIB
-    bmp180_static
-    ssd1306_static
-    gpio_static
-    binary_static
-)
-
-add_executable(ex_altimeter ${ALTIMETER_SOURCES} ${ALTIMETER_HEADERS})
-add_executable(ex_altimeter_static ${ALTIMETER_SOURCES} ${ALTIMETER_HEADERS})
-target_link_libraries(ex_altimeter ${ALTIMETER_LIB})
-target_link_libraries(ex_altimeter_static ${ALTIMETER_STATIC_LIB})
 # install
 set(EXECUTABLES
 ex_binary
@@ -288,8 +262,6 @@ ex_l3gd20
 ex_l3gd20_static
 ex_bmp180
 ex_bmp180_static
-ex_altimeter
-ex_altimeter_static
 )
 
 install(TARGETS ${EXECUTABLES} DESTINATION examples)
