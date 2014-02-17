@@ -344,3 +344,11 @@ double altitude(long pa, long p0)
 
     return altitude;
 }
+
+
+/// If you know your altitude then p0 (pressure at sea level)
+/// can be calculated using the measured pressure.
+double pressure_at_sea(long p, double altitude)
+{
+    return p / pow((1.0 - (altitude / 44330.0)), 5.255);
+}

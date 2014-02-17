@@ -11,6 +11,10 @@ static const long P0AtSea = 101325;
 /// calculate altitude from give pressure and P0 (both Pa)
 double altitude(long pa, long p0);
 
+/// calculate p0 (pressure at sea level) from measured
+/// pressure and the known altitude.
+double pressure_at_sea(long p, double altitude);
+
 
 /// OSS modes
 enum OssMode {
