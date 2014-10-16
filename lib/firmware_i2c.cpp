@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -38,10 +39,10 @@ int Firmware_I2C::openDevice()
     if (mFd > 0)
         closeDevice();
 
-    /// Open I2C device
     if (mDebug)
         std::cout << "Firmware_I2C::" << __func__ << ":" << __LINE__ << " opening device " << mDevice << std::endl;
 
+    /// Open I2C device
     mFd = open(mDevice, O_RDWR);
     if (mFd < 0) {
         std::cerr << __func__ << ":" << __LINE__ << " openI2C failed with error " << mFd << std::endl;
@@ -49,9 +50,9 @@ int Firmware_I2C::openDevice()
     }
 
     if (mDebug) {
-        std::cerr <<  "Firmware_I2C::" << __func__ << ":" << __LINE__ << " hex address " << std::hex << mAddress << std::dec << std::endl;
+        printf("Address 0x%02x\n", mAddress);
         Binary binary;
-        binary.printByteAsBinary("bin address", mAddress);
+        binary.printByteAsBinary("Address", mAddress);
         std::cerr << std::endl;
     }
 
