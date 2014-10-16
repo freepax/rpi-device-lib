@@ -62,7 +62,7 @@ int Bmp180::openDevice()
     mCalibration.mc  = buffer[18] << 8 | buffer[19];
     mCalibration.md  = buffer[20] << 8 | buffer[21];
 
-    if (mDebug || 1) {
+    if (mDebug) {
         std::cout << "ac1  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.ac1 << std::dec << std::endl;
         std::cout << "ac2  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.ac2 << std::dec << std::endl;
         std::cout << "ac3  0x" << std::hex << std::setw(4) << std::setfill('0') << mCalibration.ac3 << std::dec << std::endl;
