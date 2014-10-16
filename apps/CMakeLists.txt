@@ -1,5 +1,19 @@
 include_directories(../include/)
 
+# GPIO TIMER
+set(GPIO_SOURCES
+    gpio_timer.cpp
+)
+
+set(GPIO_HEADERS
+    ../${INCLUDE}/gpio.h
+)
+
+add_executable(gpio_timer ${GPIO_SOURCES} ${GPIO_HEADERS})
+add_executable(gpio_timer_static ${GPIO_SOURCES} ${GPIO_HEADERS})
+target_link_libraries(gpio_timer gpio)
+target_link_libraries(gpio_timer_static gpio_static)
+
 
 # Altimeter
 set(ALTIMETER_SOURCES

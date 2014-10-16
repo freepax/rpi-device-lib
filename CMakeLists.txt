@@ -7,8 +7,9 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_PREFIX install)
 
 # specify the cross compiler
-set(COMPILER_PATH /usr/local/arm-bcm2708/bin/)
-set(COMPILER_NAME arm-linux-gnueabihf)
+#set(COMPILER_PATH /usr/local/arm-bcm2708/bin/)
+#set(COMPILER_NAME arm-linux-gnueabihf)
+set(COMPILER_NAME arm-linux-gnueabi)
 
 SET(CMAKE_C_COMPILER   ${COMPILER_PATH}${COMPILER_NAME}-gcc)
 SET(CMAKE_CXX_COMPILER ${COMPILER_PATH}${COMPILER_NAME}-g++)
