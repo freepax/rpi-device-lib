@@ -297,11 +297,15 @@ int timeDateString(unsigned char *buffer)
 
 int main(int argc, char **argv)
 {
-    std::cout << "ex_ssd1306" << std::endl;
-
-    std::cout << "argc " << argc << std::endl;
+    /// check args, we may be provided p0 to use
     if (argc == 2) {
-        p0 = atol(argv[1]);
+        long p = atol(argv[1]);
+        std::cout << "provided p " << p << std::endl;
+
+        /// check that provided p0 is reasonalbe
+        if (p > 80000 && p < 150000)
+            p0 = p;
+
         std::cout << "P0 set to " << std::dec << p0 << std::endl;
     }
 
@@ -343,7 +347,7 @@ int main(int argc, char **argv)
         int oss_mode = ModeOss3;
 
         /// don't read temperature and pressure too often
-        if (loop ++ == 5) {
+        if (loop++ == 5) {
             /// temperature...
             if (bmp180.readTemperature(&temperature) < 0) {
                 std::cerr << __func__ << ":" << __LINE__ << " readRemperatur failed" << std::endl;
@@ -388,6 +392,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < samples; i++)
                 pa += pressure[i];
             pa /= samples;
+
             double alt = 98.0;
             printf("Calculated pressure %4.2f (altitude %4.2f)\n", pressure_at_sea(pa, alt), alt);
 
