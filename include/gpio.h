@@ -14,8 +14,8 @@ static const int GpioInput = 0;
 static const int GpioOutput = 1;
 
 /// hi or lo output on pin
-static const int GpioOff    = 0;
-static const int GpioOn     = 1;
+static const int GpioOff = 0;
+static const int GpioOn = 1;
 
 
 /// all the gpio pins on model B rev 2
