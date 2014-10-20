@@ -77,6 +77,8 @@ altimeter
 altimeter_static
 barologger
 barologger_static
+gpio_timer
+gpio_timer_static
 )
 
 install(TARGETS ${EXECUTABLES} DESTINATION apps)

@@ -6,8 +6,10 @@
 #include <gpio.h>
 
 /// delays
-static const int OnTime = 600;
-static const int OffTime = 30;
+//static const int OnTime = 600;
+static const int OnTime = 1;
+//static const int OffTime = 30;
+static const int OffTime = 1;
 
 /// pin to use
 static const int iopin = GPIO::Gpio4;
@@ -33,14 +35,14 @@ int main(int argc, char **argv)
 	gpio.setGpio(iopin, GPIO::GpioOn);
 
         /// wait for MicroSeconds microseconds
-	usleep(OnTime);
+	sleep(OnTime);
 
 	/// switch off
 	std::cout << "Timer off (gpio " << std::dec << iopin << ")" << std::endl;
 	gpio.setGpio(iopin, GPIO::GpioOff);
 
 	/// wait for MicroSeconds microseconds
-	usleep(OffTime);
+	sleep(OffTime);
     }
 
     return 0;
