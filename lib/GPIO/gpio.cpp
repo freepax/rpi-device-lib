@@ -40,7 +40,6 @@ int Gpio::openDevice()
 
     /// mmap GPIO
     if (mDebug) std::cout << "Gpio::" << __func__ << "(): Mapping " << DevMem << std::endl;
-
     mGpio = (unsigned*)mmap(NULL, BlockSize, PROT_READ|PROT_WRITE, MAP_SHARED, mFd, GpioBase);
     if (mGpio == MAP_FAILED) {
         std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " mmap failed" << std::endl;
@@ -73,12 +72,11 @@ int Gpio::closeDevice()
         mFd = -1;
     }
 
-    if (mDebug) std::cout << "Gpio::" << __func__ << ":" << __LINE__ << " Munmap " << DevMem << std::endl;
-
     if (mGpio == NULL) {
-        std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " memory pointer already NULL" << std::endl;
-        return -1;
+	return 0;
     }
+
+    if (mDebug) std::cout << "Gpio::" << __func__ << ":" << __LINE__ << " Munmap " << DevMem << std::endl;
 
     if (munmap(mGpio, BlockSize) < 0) {
         std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " munmap failed" << std::endl;
@@ -94,16 +92,6 @@ int Gpio::closeDevice()
 }
 
 
-/// get and return gpio pin logic level
-bool Gpio::getGpio(int pin)
-{
-    /// should maby have a pin number check here
-    unsigned gpio_level = *(mGpio + 13);
-    unsigned int value = gpio_level;
-    return ((value & (1 << pin)) != 0);
-}
-
-
 /// Set gpio pin to input or output
 void Gpio::setGpioDirection(int pin, int direction)
 {
@@ -112,6 +100,16 @@ void Gpio::setGpioDirection(int pin, int direction)
     case GPIO::GpioOutput: *(mGpio + (pin / 10)) |=  (1 << ((pin % 10) * 3)); break;
     default: std::cerr << "Gpio::" << __func__ << ":" << __LINE__ << " Unknown direction " << direction << std::endl;
     }
+}
+
+
+/// get and return gpio pin logic level
+bool Gpio::getGpio(int pin)
+{
+    /// should maby have a pin number check here
+    unsigned gpio_level = *(mGpio + 13);
+    unsigned int value = gpio_level;
+    return ((value & (1 << pin)) != 0);
 }
 
 
