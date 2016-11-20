@@ -9,6 +9,7 @@ set(BINARY_SOURCE binary.cpp)
 add_library(binary SHARED ${BINARY_SOURCE})
 add_library(binary_static STATIC ${BINARY_SOURCE})
 
+set (CMAKE_EXE_LINKER_FLAGS -march=armv7-a -mfloat-abi=hard -mfpu=neon -marm -mthumb-interwork) 
 
 target_link_libraries(firmware_i2c binary)
 target_link_libraries(firmware_i2c_static binary_static)
