@@ -9,16 +9,16 @@ set(CMAKE_INSTALL_PREFIX /usr/local)
 # specify the cross compiler
 #set(COMPILER_PATH /usr/local/arm-bcm2708/bin/)
 #set(COMPILER_NAME arm-linux-gnueabihf)
-set(COMPILER_NAME arm-linux-gnueabi)
+#set(COMPILER_NAME arm-linux-gnueabi)
 
-SET(CMAKE_C_COMPILER   ${COMPILER_PATH}${COMPILER_NAME}-gcc)
-SET(CMAKE_CXX_COMPILER ${COMPILER_PATH}${COMPILER_NAME}-g++)
+#SET(CMAKE_C_COMPILER   ${COMPILER_PATH}${COMPILER_NAME}-gcc)
+#SET(CMAKE_CXX_COMPILER ${COMPILER_PATH}${COMPILER_NAME}-g++)
 
 #SET(CMAKE_C_COMPILER   gcc)
 #SET(CMAKE_CXX_COMPILER g++)
 
 # where is the target environment
-SET(CMAKE_FIND_ROOT_PATH /usr/local/angstrom/arm/)
+#SET(CMAKE_FIND_ROOT_PATH /usr/local/angstrom/arm/)
 
 # search for programs in the build host directories
 SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
