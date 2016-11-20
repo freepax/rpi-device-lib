@@ -264,4 +264,4 @@ ex_bmp180
 ex_bmp180_static
 )
 
-install(TARGETS ${EXECUTABLES} DESTINATION examples)
+install(TARGETS ${EXECUTABLES} DESTINATION bin)

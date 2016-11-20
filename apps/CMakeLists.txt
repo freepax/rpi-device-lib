@@ -81,4 +81,4 @@ gpio_timer
 gpio_timer_static
 )
 
-install(TARGETS ${EXECUTABLES} DESTINATION apps)
+install(TARGETS ${EXECUTABLES} DESTINATION bin)

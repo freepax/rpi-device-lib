@@ -4,7 +4,7 @@ project (RpiEmbedded)
 set(CMAKE_CURRENT_SOURCE_DIR .)
 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(CMAKE_INSTALL_PREFIX install)
+set(CMAKE_INSTALL_PREFIX /usr/local)
 
 # specify the cross compiler
 #set(COMPILER_PATH /usr/local/arm-bcm2708/bin/)
