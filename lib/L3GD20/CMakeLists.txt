@@ -7,4 +7,10 @@ set (CMAKE_EXE_LINKER_FLAGS -march=armv7-a -mfloat-abi=hard -mfpu=neon -marm -mt
 
 add_library(l3gd20 SHARED ${L3GD20_SOURCE} ${L3GD20_HEADERS})
 add_library(l3gd20_static STATIC ${L3GD20_SOURCE} ${L3GD20_HEADERS})
+
+set_target_properties(l3gd20 PROPERTIES
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
 install(TARGETS l3gd20 DESTINATION lib)

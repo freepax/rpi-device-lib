@@ -12,4 +12,10 @@ add_library(bmp180_static STATIC ${BMP180_SOURCE} ${BMP180_HEADERS})
 
 target_link_libraries(bmp180 ${BMP180_LIB})
 target_link_libraries(bmp180_static ${BMP180_STATIC_LIB})
+
+set_target_properties(bmp180 PROPERTIES
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
 install(TARGETS bmp180 DESTINATION lib)

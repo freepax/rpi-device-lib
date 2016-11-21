@@ -11,5 +11,10 @@ add_library(pca9685_static STATIC ${PCA9685_SOURCE} ${PCA9685_HEADERS})
 target_link_libraries(pca9685 firmware_i2c binary)
 target_link_libraries(pca9685_static firmware_i2c_static binary_static)
 
+set_target_properties(pca9685 PROPERTIES
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
 install(TARGETS pca9685 DESTINATION lib)
 install(TARGETS pca9685_static DESTINATION lib)

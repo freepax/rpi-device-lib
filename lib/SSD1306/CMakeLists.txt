@@ -11,4 +11,9 @@ add_library(ssd1306_static STATIC ${SSD1306_SOURCE} ${SSD1306_HEADERS})
 target_link_libraries(ssd1306 firmware_i2c binary)
 target_link_libraries(ssd1306_static firmware_i2c_static binary_static)
 
+set_target_properties(ssd1306 PROPERTIES
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
 install(TARGETS ssd1306 DESTINATION lib)

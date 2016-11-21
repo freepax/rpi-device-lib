@@ -11,4 +11,9 @@ add_library(mcp4725_static STATIC ${MCP4725_SOURCE} ${MCP4725_HEADERS})
 target_link_libraries(mcp4725 firmware_i2c binary)
 target_link_libraries(mcp4725_static firmware_i2c_static binary_static)
 
+set_target_properties(mcp4725 PROPERTIES
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
 install(TARGETS mcp4725 DESTINATION lib)

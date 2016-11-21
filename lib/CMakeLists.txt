@@ -14,10 +14,18 @@ set (CMAKE_EXE_LINKER_FLAGS -march=armv7-a -mfloat-abi=hard -mfpu=neon -marm -mt
 target_link_libraries(firmware_i2c binary)
 target_link_libraries(firmware_i2c_static binary_static)
 
-
 install(TARGETS binary DESTINATION lib)
 install(TARGETS firmware_i2c DESTINATION lib)
 
+set_target_properties(binary PROPERTIES
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
+set_target_properties(firemware_i2c PROPERTIES
+  VERSION 1.0.0
+  SOVERSION 1
+)
 
 add_subdirectory(GPIO)
 add_subdirectory(ADS1015)

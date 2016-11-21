@@ -11,4 +11,9 @@ add_library(ads1015_static STATIC ${ADS1015_SOURCE} ${ADS1015_HEADERS})
 target_link_libraries(ads1015 firmware_i2c binary)
 target_link_libraries(ads1015_static firmware_i2c_static binary_static)
 
+set_target_properties(ads1015 PROPERTIES
+  VERSION 1.0.0
+  SOVERSION 1
+)
+
 install(TARGETS ads1015 DESTINATION lib)
